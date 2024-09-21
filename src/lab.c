@@ -6,8 +6,6 @@
 
 #include "lab.h"
 
-
-
 //   struct shell
 //   {
 //     int shell_is_interactive;
@@ -29,7 +27,20 @@
    * @return const char* The prompt
    */
   char *get_prompt(const char *env) {
-    return NULL;
+    char defaultPrompt[] = "shell>";
+    char *prompt;
+
+    if(env != NULL) { // check for environment variable
+        prompt = getenv(env);
+    } else {    // use default environment variable
+        prompt = getenv("MY_PROMPT");
+    }
+
+    if(prompt == NULL) { // use default prompt "shell>"
+        prompt = (char*)malloc(sizeof(char) * strlen(defaultPrompt));
+    }
+   
+    return prompt;
   }
 
   /*
