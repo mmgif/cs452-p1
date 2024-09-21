@@ -1,6 +1,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -29,15 +30,27 @@
   char *get_prompt(const char *env) {
     char defaultPrompt[] = "shell>";
     char *prompt;
+    char *var;
 
     if(env != NULL) { // check for environment variable
-        prompt = getenv(env);
+        var = getenv(env);
+          prompt = (char*) malloc(sizeof(char) * (strlen(var) + 1));
+          strncpy(prompt, var, strlen(var));
     } else {    // use default environment variable
-        prompt = getenv("MY_PROMPT");
+        var = getenv("MY_PROMPT");
+        prompt = (char*) malloc(sizeof(char) * (strlen(var) + 1));
+        strncpy(prompt, var, strlen(var));
     }
 
     if(prompt == NULL) { // use default prompt "shell>"
-        prompt = (char*)malloc(sizeof(char) * strlen(defaultPrompt));
+        prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
+
+        if(prompt == NULL) {
+          printf("help me");
+          return NULL;
+        }
+
+        strncpy(prompt, defaultPrompt, strlen(defaultPrompt));  // gotta copy it in there, silly
     }
    
     return prompt;
