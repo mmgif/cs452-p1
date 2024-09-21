@@ -41,11 +41,12 @@
         prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
 
         if(prompt == NULL) {
-          printf("help me");
+          fprintf(stderr, "could not allocate string\n");
           return NULL;
         }
-
-        strncpy(prompt, defaultPrompt, strlen(defaultPrompt));  // gotta copy it in there, silly
+        fprintf(stderr, "allocated string\n");
+        strncpy(prompt, defaultPrompt, strlen(defaultPrompt) + 1);  // gotta copy it in there, silly
+        // fprintf(stderr, "string: %s", prompt);
     }
    
     return prompt;
@@ -61,6 +62,7 @@
    * errno is set to indicate the error.
    */
   int change_dir(char **dir) {
+    UNUSED(dir);
     return -1;
   }
 
@@ -75,6 +77,7 @@
    * @return The line read in a format suitable for exec
    */
   char **cmd_parse(char const *line) {
+    UNUSED(line);
     return NULL;
   }
 
@@ -84,7 +87,7 @@
    * @param line the line to free
    */
   void cmd_free(char ** line) {
-    
+    UNUSED(line);
   }
 
   /*
@@ -97,6 +100,7 @@
    * @return The new line with no whitespace
    */
   char *trim_white(char *line) {
+    UNUSED(line);
     return NULL;
   }
 
@@ -113,6 +117,8 @@
    * @return True if the command was a built in command
    */
   bool do_builtin(struct shell *sh, char **argv) {
+    UNUSED(sh);
+    UNUSED(argv);
     return false;
   }
 
@@ -127,6 +133,14 @@
    * @param sh
    */
   void sh_init(struct shell *sh) {
+    sh = (struct shell*)malloc(sizeof(struct shell));
+    if(sh == NULL) {
+      fprintf(stderr, "could not init shell\n");
+    }
+    fprintf(stderr, "init'd shell\n");
+
+    // sh->prompt = get_prompt("MY_PROMPT");
+    
 
   }
 
@@ -137,7 +151,8 @@
    * @param sh
    */
   void sh_destroy(struct shell *sh) {
-
+    // free(sh->prompt);
+    // free(sh);
   }
 
   /*
