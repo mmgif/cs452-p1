@@ -30,16 +30,11 @@
   char *get_prompt(const char *env) {
     char defaultPrompt[] = "shell>";
     char *prompt;
-    char *var;
 
     if(env != NULL) { // check for environment variable
-        var = getenv(env);
-          prompt = (char*) malloc(sizeof(char) * (strlen(var) + 1));
-          strncpy(prompt, var, strlen(var));
+        prompt = getenv(env);
     } else {    // use default environment variable
-        var = getenv("MY_PROMPT");
-        prompt = (char*) malloc(sizeof(char) * (strlen(var) + 1));
-        strncpy(prompt, var, strlen(var));
+        prompt = getenv("MY_PROMPT");
     }
 
     if(prompt == NULL) { // use default prompt "shell>"
