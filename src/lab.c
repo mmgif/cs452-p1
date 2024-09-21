@@ -139,9 +139,10 @@
     }
     fprintf(stderr, "init'd shell\n");
 
-    // sh->prompt = get_prompt("MY_PROMPT");
-    
 
+
+
+    sh->prompt = get_prompt("MY_PROMPT");
   }
 
   /*
@@ -152,7 +153,7 @@
    */
   void sh_destroy(struct shell *sh) {
     // free(sh->prompt);
-    // free(sh);
+    free(sh);
   }
 
   /*
