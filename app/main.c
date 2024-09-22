@@ -11,23 +11,6 @@ int main(int argc, char * argv[])
 {
   printf("hello world\n");
 
-
-
-  printf("%s\n", trim_white("ls -a"));
-  printf("%s\n", trim_white("ls -a    "));
-  printf("%s\n", trim_white("    ls -a"));
-  printf("%s\n", trim_white("   ls -a      "));
-
-
-
-
-
-
-
-
-
-  return 0;
-
   struct shell sh;
   char *line;
 

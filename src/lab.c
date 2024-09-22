@@ -89,8 +89,30 @@
    * @return The line read in a format suitable for exec
    */
   char **cmd_parse(char const *line) {
-    UNUSED(line);
-    return NULL;
+    // UNUSED(line);
+    // return NULL;
+    char **cmd = (char**) malloc(sizeof(char*) * _SC_ARG_MAX);
+    if(cmd == NULL) {
+      fprintf(stderr, "could not allocate cmd");
+    }
+    char *tok;
+    int ii = 0;
+
+    char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
+    if(lines == NULL) {
+      fprintf(stderr, "could not allocate line");
+    }
+    strncpy(lines, line, strlen(line) + 1);
+
+    // init the loop
+    tok = strtok(lines, " ");   // tokenize on spaces
+    while(tok != NULL) {  // Null returned at end of string
+      cmd[ii] = (char*) malloc(sizeof(char) * (strlen(tok) + 1));
+      strncpy(cmd[ii], tok, strlen(tok) + 1);
+
+      tok = strtok(NULL, " ");  // scan where prev success call ended
+    }
+    return cmd;
   }
 
   /*
@@ -99,7 +121,12 @@
    * @param line the line to free
    */
   void cmd_free(char ** line) {
-    UNUSED(line);
+    // UNUSED(line);
+    int size = sizeof(line) / sizeof(line[0]);  // should be like, size of entire and size of ptrs
+    for(int ii = 0; ii < size; ii++) {
+      free(line[ii]);
+    } 
+    free(line);
   }
 
   /*
