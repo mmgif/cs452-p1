@@ -1,7 +1,10 @@
-
+/* TODO doc comment
+ *
+ */
 
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -30,23 +33,32 @@
   char *get_prompt(const char *env) {
     char defaultPrompt[] = "shell>";
     char *prompt;
+    char *ptr;
 
     if(env != NULL) { // check for environment variable
-        prompt = getenv(env);
+        ptr = getenv(env);
     } else {    // use default environment variable
-        prompt = getenv("MY_PROMPT");
+        ptr = getenv("MY_PROMPT");
     }
 
-    if(prompt == NULL) { // use default prompt "shell>"
-        prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
-
-        if(prompt == NULL) {
+    if(ptr != NULL) {
+      prompt = (char*)malloc(sizeof(char) * (strlen(ptr) + 1));
+      if(prompt == NULL) {
+        fprintf(stderr, "could not allocate string\n");
+        return NULL;
+      }
+      fprintf(stderr, "allocated string\n");
+      strncpy(prompt, ptr, strlen(ptr) + 1);
+    } else {    // use default prompt "shell>" 
+      prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
+      if(prompt == NULL) {
           fprintf(stderr, "could not allocate string\n");
           return NULL;
         }
+        
         fprintf(stderr, "allocated string\n");
         strncpy(prompt, defaultPrompt, strlen(defaultPrompt) + 1);  // gotta copy it in there, silly
-        // fprintf(stderr, "string: %s", prompt);
+        fprintf(stderr, "get_prompt: %s\n", prompt);
     }
    
     return prompt;
@@ -100,8 +112,33 @@
    * @return The new line with no whitespace
    */
   char *trim_white(char *line) {
-    UNUSED(line);
-    return NULL;
+    // UNUSED(line);
+    // return NULL;
+    int start;
+    int end;
+    int ii = 0;
+    int jj = strlen(line) - 1;  // not inclusive of \0, also needs zero indexing
+
+    while(ii < (int)strlen(line) && (isspace(line[ii]) > 0)) {
+      ii++;
+    }
+    start = ii;
+
+    while(jj > 0 && (isspace(line[jj]) > 0)) {
+      jj--;
+    }
+    end = jj + 1;
+
+    char *trimmed = malloc(sizeof(char) * (abs(start - end) + 1));  // add one for \0
+
+    jj = 0;
+    for(ii = start; ii < end; ii++) {
+      trimmed[jj] = line[ii];
+      jj++;
+    }
+    trimmed[jj] = '\0';   // add null terminator
+
+    return trimmed;
   }
 
 
@@ -135,14 +172,51 @@
   void sh_init(struct shell *sh) {
     sh = (struct shell*)malloc(sizeof(struct shell));
     if(sh == NULL) {
-      fprintf(stderr, "could not init shell\n");
+      fprintf(stderr, "could not allocate shell\n");
     }
-    fprintf(stderr, "init'd shell\n");
+    fprintf(stderr, "allocated shell\n");
 
+    // ---> Below information doesn't save...
+    // sh->shell_is_interactive = 1;
+    // sh->shell_pgid = 0;
+    
+    // // set up the termios struct??
+    // // generated from onyx defaults
+    // sh->shell_tmodes.c_iflag = 0x6d02;
+    // sh->shell_tmodes.c_oflag = OPOST | ONLCR;   // 0x5
+    // sh->shell_tmodes.c_cflag = 0x4bf;
+    // sh->shell_tmodes.c_lflag = 0x8a3b;
+    // sh->shell_tmodes.c_line = 0x0;
 
+    // // for(int ii = 0; ii < 17; ii++) {
+    // //    sh->shell_tmodes.c_cc[ii] = ii;
+    // // }
 
+    // // there are only 17 defined control characters
+    // sh->shell_tmodes.c_cc[0] = VKILL;   // 0x3
+    // sh->shell_tmodes.c_cc[1] = 0x1c;
+    // sh->shell_tmodes.c_cc[2] = 0x7f;
+    // sh->shell_tmodes.c_cc[3] = 0x15;
+    // sh->shell_tmodes.c_cc[4] = VEOF;    // 0x4
+    // sh->shell_tmodes.c_cc[5] = VINTR;   // 0x0
+    // sh->shell_tmodes.c_cc[6] = VERASE;  // 0x1
+    // sh->shell_tmodes.c_cc[7] = VINTR;   // 0x0
+    // sh->shell_tmodes.c_cc[8] = 0x11;
+    // sh->shell_tmodes.c_cc[9] = 0x13;
+    // sh->shell_tmodes.c_cc[10] = 0x1a;
+    // sh->shell_tmodes.c_cc[11] = 0xff;
+    // sh->shell_tmodes.c_cc[12] = 0x12;
+    // sh->shell_tmodes.c_cc[13] = VLNEXT; // 0xf
+    // sh->shell_tmodes.c_cc[14] = 0x17;
+    // sh->shell_tmodes.c_cc[15] = 0x16;
+    // sh->shell_tmodes.c_cc[16] = 0xff;
 
-    sh->prompt = get_prompt("MY_PROMPT");
+    // sh->shell_tmodes.c_ispeed = 0xf;
+    // sh->shell_tmodes.c_ospeed = 0xf;
+
+    // sh->shell_terminal = 0;
+    // sh->prompt = get_prompt("MY_PROMPT");
+    // fprintf(stderr, "sh_init: %s\n", sh->prompt); 
   }
 
   /*
@@ -152,7 +226,7 @@
    * @param sh
    */
   void sh_destroy(struct shell *sh) {
-    // free(sh->prompt);
+    free(sh->prompt);
     free(sh);
   }
 
