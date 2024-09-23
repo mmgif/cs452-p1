@@ -48,7 +48,7 @@
         fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
         return NULL;
       }
-      fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
+      // fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
       strncpy(prompt, ptr, strlen(ptr) + 1);
     } else {    // use default prompt "shell>" 
       prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
@@ -57,9 +57,9 @@
           return NULL;
         }
         
-        fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
+        // fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
         strncpy(prompt, defaultPrompt, strlen(defaultPrompt) + 1);  // gotta copy it in there, silly
-        fprintf(stderr, "%s: prompt: %s\n", METHOD_NAME, prompt);
+        // fprintf(stderr, "%s: prompt: %s\n", METHOD_NAME, prompt);
     }
    
     return prompt;
@@ -93,7 +93,11 @@
     const char *METHOD_NAME = "cmd_parse";
     // UNUSED(line);
     // return NULL;
-    char **cmd = (char**) malloc(sizeof(char*) * _SC_ARG_MAX);
+    const long ARG_MAX = sysconf(_SC_ARG_MAX);
+    // fprintf(stderr, "%s: _SC_ARG_MAX: %ld\n", METHOD_NAME, ARG_MAX);
+
+    // char **cmd = (char**) malloc(sizeof(char*) * ARG_MAX);
+    char **cmd = (char**) calloc(ARG_MAX, sizeof(char*)); // FIXY still leaking?
     if(cmd == NULL) {
       fprintf(stderr, "%s: could not allocate strings\n", METHOD_NAME);
     }
@@ -113,7 +117,9 @@
       strncpy(cmd[ii], tok, strlen(tok) + 1);
 
       tok = strtok(NULL, " ");  // scan where prev success call ended
+      ii++;
     }
+    free(lines);
     return cmd;
   }
 
@@ -124,9 +130,13 @@
    */
   void cmd_free(char ** line) {
     // UNUSED(line);
-    int size = sizeof(line) / sizeof(line[0]);  // should be like, size of entire and size of ptrs
+    const long ARG_MAX = sysconf(_SC_ARG_MAX);
+    int size = ARG_MAX;
+    // int size = sizeof(line) / sizeof(line[0]);  // should be like, size of entire and size of ptrs
     for(int ii = 0; ii < size; ii++) {
-      free(line[ii]);
+      if(line[ii] != NULL) {  // FIXY still leaking
+        free(line[ii]);
+      }
     } 
     free(line);
   }
@@ -158,7 +168,8 @@
     }
     end = jj + 1;
 
-    char *trimmed = malloc(sizeof(char) * (abs(start - end) + 1));  // add one for \0
+    int size = sizeof(char) * (abs(start - end) + 1);
+    char *trimmed = malloc(size);  // add one for \0
 
     jj = 0;
     for(ii = start; ii < end; ii++) {
@@ -167,7 +178,11 @@
     }
     trimmed[jj] = '\0';   // add null terminator
 
-    return trimmed;
+    // copy trimmed into line, so that trimmed can be free'd
+    strncpy(line, trimmed, size);
+    free(trimmed);
+
+    return line;
   }
 
 

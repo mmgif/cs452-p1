@@ -11,6 +11,11 @@ int main(int argc, char * argv[])
 {
   printf("hello world\n");
 
+  char **cmd = cmd_parse("ls -l -a");
+  cmd_free(cmd);
+
+  return 0;
+
   struct shell sh;
   char *line;
 
