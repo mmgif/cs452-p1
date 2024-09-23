@@ -31,6 +31,7 @@
    * @return const char* The prompt
    */
   char *get_prompt(const char *env) {
+    const char *METHOD_NAME = "get_prompt";
     char defaultPrompt[] = "shell>";
     char *prompt;
     char *ptr;
@@ -44,21 +45,21 @@
     if(ptr != NULL) {
       prompt = (char*)malloc(sizeof(char) * (strlen(ptr) + 1));
       if(prompt == NULL) {
-        fprintf(stderr, "could not allocate string\n");
+        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
         return NULL;
       }
-      fprintf(stderr, "allocated string\n");
+      fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
       strncpy(prompt, ptr, strlen(ptr) + 1);
     } else {    // use default prompt "shell>" 
       prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
       if(prompt == NULL) {
-          fprintf(stderr, "could not allocate string\n");
+          fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
           return NULL;
         }
         
-        fprintf(stderr, "allocated string\n");
+        fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
         strncpy(prompt, defaultPrompt, strlen(defaultPrompt) + 1);  // gotta copy it in there, silly
-        fprintf(stderr, "get_prompt: %s\n", prompt);
+        fprintf(stderr, "%s: prompt: %s\n", METHOD_NAME, prompt);
     }
    
     return prompt;
@@ -89,18 +90,19 @@
    * @return The line read in a format suitable for exec
    */
   char **cmd_parse(char const *line) {
+    const char *METHOD_NAME = "cmd_parse";
     // UNUSED(line);
     // return NULL;
     char **cmd = (char**) malloc(sizeof(char*) * _SC_ARG_MAX);
     if(cmd == NULL) {
-      fprintf(stderr, "could not allocate cmd");
+      fprintf(stderr, "%s: could not allocate strings\n", METHOD_NAME);
     }
     char *tok;
     int ii = 0;
 
     char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
     if(lines == NULL) {
-      fprintf(stderr, "could not allocate line");
+      fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
     }
     strncpy(lines, line, strlen(line) + 1);
 
@@ -197,11 +199,12 @@
    * @param sh
    */
   void sh_init(struct shell *sh) {
+    const char *METHOD_NAME = "sh_init";
     sh = (struct shell*)malloc(sizeof(struct shell));
     if(sh == NULL) {
-      fprintf(stderr, "could not allocate shell\n");
+      fprintf(stderr, "%s: could not allocate shell\n", METHOD_NAME);
     }
-    fprintf(stderr, "allocated shell\n");
+    fprintf(stderr, "%s: allocated shell\n", METHOD_NAME);
 
     // ---> Below information doesn't save...
     // sh->shell_is_interactive = 1;
