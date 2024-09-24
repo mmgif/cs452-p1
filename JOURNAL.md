@@ -13,6 +13,10 @@
 
 ### 2024-08-23
 * https://stackoverflow.com/questions/5935933/dynamically-create-an-array-of-strings-with-malloc
+* does chdir do relative paths?
+* getting better about adding print statements
+* checking mallocs/frees
+
 
 ### 2024-09-22
 * discovered shell init is not setting any of it variables? idk why

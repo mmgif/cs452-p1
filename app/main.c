@@ -7,14 +7,11 @@
 
 #include "../src/lab.h"
 
+// void initialize_readline(void);
+
 int main(int argc, char * argv[])
 {
   printf("hello world\n");
-
-  char **cmd = cmd_parse("ls -l -a");
-  cmd_free(cmd);
-
-  return 0;
 
   struct shell sh;
   char *line;
@@ -63,18 +60,26 @@ int main(int argc, char * argv[])
   // setup ps
   char *ps = (char*) malloc(sizeof(char) * (strlen(sh.prompt) + 2));
   snprintf(ps, sizeof(char) * (strlen(sh.prompt) + 2), "%s ", sh.prompt);
-
+  
   using_history();
   while((line = readline(ps))) {
-    printf("%s\n", line);
-//    replace above with call to parse line
-//    char **command = cmd_parse(line);
-//    returns the line read in a format suitable for execution
-
-    add_history(line);
+    // if readline encounters EOF, line is empty at point and (char*) NULL is returned
+    // FIXY does not respond to ctrl+d (EOF)
     
-    // cmd_free(line);
-//    free the line from cmd_parse
+
+    // printf("%s\n", line);
+//    replace above with call to parse line
+   char **cmd = cmd_parse(line);
+  //  returns the line read in a format suitable for execution
+    if(!do_builtin(&sh, cmd)) {
+      // TODO execvp system call 
+    }
+
+    if(line && *line) {
+      add_history(line);
+    }
+    
+    cmd_free(cmd);
     free(line);
   }
 
@@ -85,3 +90,7 @@ int main(int argc, char * argv[])
 
   return 0;
 }
+
+// void initialize_readline() {
+  // rl_bind_key('\t', rl_insert);
+// }

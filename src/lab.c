@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <pwd.h>
+#include <errno.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -34,22 +36,22 @@
     const char *METHOD_NAME = "get_prompt";
     char defaultPrompt[] = "shell>";
     char *prompt;
-    char *ptr;
+    char *envPtr;
 
     if(env != NULL) { // check for environment variable
-        ptr = getenv(env);
+        envPtr = getenv(env);
     } else {    // use default environment variable
-        ptr = getenv("MY_PROMPT");
+        envPtr = getenv("MY_PROMPT");
     }
 
-    if(ptr != NULL) {
-      prompt = (char*)malloc(sizeof(char) * (strlen(ptr) + 1));
+    if(envPtr != NULL) {
+      prompt = (char*)malloc(sizeof(char) * (strlen(envPtr) + 1));
       if(prompt == NULL) {
         fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
         return NULL;
       }
       // fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
-      strncpy(prompt, ptr, strlen(ptr) + 1);
+      strncpy(prompt, envPtr, strlen(envPtr) + 1);
     } else {    // use default prompt "shell>" 
       prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
       if(prompt == NULL) {
@@ -75,8 +77,85 @@
    * errno is set to indicate the error.
    */
   int change_dir(char **dir) {
-    UNUSED(dir);
-    return -1;
+    // UNUSED(dir);
+    // return -1;
+    const char *METHOD_NAME = "change_dir";
+
+    int homeDirNameSize;
+    int pathDirNameSize;
+    int dirNameSize;
+    char *path;
+    char *home;
+    char *envPtr;
+    int retVal;
+    // uid_t uid;
+    // struct passwd pwuid;
+
+    // 1. get env
+    envPtr = getenv("HOME");
+    // fprintf(stderr, "%s: getenv(\"HOME\"): %s", METHOD_NAME, envPtr);
+    if(envPtr == NULL) {
+    // 1.1 if getenv is null
+    // then getuid
+    // and get pwuid
+    // to find home directory
+      uid_t uid = getuid();
+      struct passwd *pwuid = getpwuid(uid);
+      char* pwDir = pwuid->pw_dir;
+
+      homeDirNameSize = sizeof(char) * (strlen(pwDir) + 1);
+      home = (char*) malloc(homeDirNameSize);
+      if(home == NULL) {
+        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+      }
+      strncpy(home, pwDir, homeDirNameSize);
+    } else {
+      homeDirNameSize = sizeof(char) * (strlen(envPtr) + 1);
+      home = (char*) malloc(homeDirNameSize);
+      if(home == NULL) {
+        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+      }
+      strncpy(home, envPtr, homeDirNameSize);
+    }
+
+    // detect if args has a directory listed
+    // append directory to home directory
+    if(dir[1] != NULL) {  // FIXY this will depend on what is passed in
+      // FIXY need to check if this starts with a / (detect root)
+      // FIXY need current working directory...
+      // getcwd()?
+      dirNameSize = sizeof(char) * (strlen(dir[1]) + 1);
+      pathDirNameSize = homeDirNameSize + dirNameSize + 1;  // +1 for /
+      path = (char*) malloc(pathDirNameSize);
+      if(path == NULL) {
+       fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+      }
+      // need to append / between home and next path
+      // does change dir do relatives?
+      snprintf(path, pathDirNameSize, "%s/%s", home, dir[1]);
+      // strncpy(path, home, homeDirNameSize);
+      // strncat(path, dir[1], dirNameSize);
+    } else {
+      path = home;
+    }
+
+    // fprintf(stderr, "%s: home path: %s\n", METHOD_NAME, home);
+    fprintf(stderr, "%s: full path: %s\n", METHOD_NAME, path);
+
+
+    // then call chdir
+    errno = 0;
+    // print error if fails
+    // use chdir system call
+    retVal = chdir(path);
+
+    if(retVal == -1) {
+      perror("chdir");
+      // TODO exit?? print?? idk
+    }
+
+    free(home);
+    return retVal;
   }
 
   /*
@@ -97,7 +176,7 @@
     // fprintf(stderr, "%s: _SC_ARG_MAX: %ld\n", METHOD_NAME, ARG_MAX);
 
     // char **cmd = (char**) malloc(sizeof(char*) * ARG_MAX);
-    char **cmd = (char**) calloc(ARG_MAX, sizeof(char*)); // FIXY still leaking?
+    char **cmd = (char**) calloc(ARG_MAX, sizeof(char*));   // calloc to ensure everything else is initalized null
     if(cmd == NULL) {
       fprintf(stderr, "%s: could not allocate strings\n", METHOD_NAME);
     }
@@ -114,6 +193,9 @@
     tok = strtok(lines, " ");   // tokenize on spaces
     while(tok != NULL) {  // Null returned at end of string
       cmd[ii] = (char*) malloc(sizeof(char) * (strlen(tok) + 1));
+      if(cmd[ii] == NULL) {
+        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+      }
       strncpy(cmd[ii], tok, strlen(tok) + 1);
 
       tok = strtok(NULL, " ");  // scan where prev success call ended
@@ -134,7 +216,7 @@
     int size = ARG_MAX;
     // int size = sizeof(line) / sizeof(line[0]);  // should be like, size of entire and size of ptrs
     for(int ii = 0; ii < size; ii++) {
-      if(line[ii] != NULL) {  // FIXY still leaking
+      if(line[ii] != NULL) {
         free(line[ii]);
       }
     } 
@@ -153,6 +235,7 @@
   char *trim_white(char *line) {
     // UNUSED(line);
     // return NULL;
+    const char *METHOD_NAME = "trim_white";
     int start;
     int end;
     int ii = 0;
@@ -170,6 +253,9 @@
 
     int size = sizeof(char) * (abs(start - end) + 1);
     char *trimmed = malloc(size);  // add one for \0
+    if(trimmed == NULL) {
+      fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+    }
 
     jj = 0;
     for(ii = start; ii < end; ii++) {
@@ -198,9 +284,30 @@
    * @return True if the command was a built in command
    */
   bool do_builtin(struct shell *sh, char **argv) {
-    UNUSED(sh);
-    UNUSED(argv);
-    return false;
+    // UNUSED(sh);
+    // UNUSED(argv);
+    // return false;
+    const char *METHOD_NAME = "do_builtin";
+    const char *EXIT = "exit";
+    const char *CD = "cd";
+    const char *HISTORY = "history";
+
+    bool isBuiltIn = false;
+
+    if(strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
+      fprintf(stderr, "%s: exiting...\n", METHOD_NAME);
+      sh_destroy(sh);
+      exit(0);
+    }
+    if(strncmp(argv[0], CD, strlen(CD) + 1) == 0) {
+      fprintf(stderr, "%s: changing dir...\n", METHOD_NAME);
+      change_dir(argv);
+    }
+    if(strncmp(argv[0], HISTORY, strlen(HISTORY) + 1) == 0) {
+      fprintf(stderr, "%s: showing hist...\n", METHOD_NAME);
+    }
+
+    return isBuiltIn;
   }
 
   /*
@@ -219,7 +326,7 @@
     if(sh == NULL) {
       fprintf(stderr, "%s: could not allocate shell\n", METHOD_NAME);
     }
-    fprintf(stderr, "%s: allocated shell\n", METHOD_NAME);
+    // fprintf(stderr, "%s: allocated shell\n", METHOD_NAME);
 
     // ---> Below information doesn't save...
     // sh->shell_is_interactive = 1;
