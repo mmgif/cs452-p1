@@ -41,7 +41,7 @@
 
     if(env != NULL) { // check for environment variable
         envPtr = getenv(env);
-    } else {    // use default environment variable
+    } else {          // use default environment variable
         envPtr = getenv("MY_PROMPT");
     }
 
@@ -59,12 +59,10 @@
           fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
           return NULL;
         }
-        
         // fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
         strncpy(prompt, defaultPrompt, strlen(defaultPrompt) + 1);  // gotta copy it in there, silly
         // fprintf(stderr, "%s: prompt: %s\n", METHOD_NAME, prompt);
     }
-   
     return prompt;
   }
 
@@ -78,43 +76,25 @@
    * errno is set to indicate the error.
    */
   int change_dir(char **dir) {
-    // UNUSED(dir);
-    // return -1;
     const char *METHOD_NAME = "change_dir";
-
-    // int homeDirNameSize;
     int pathDirNameSize;
     int dirNameSize;
     char *path;
-    // char *home;
     char *envPtr;
-    int retVal;
-    // uid_t uid;
-    // struct passwd pwuid;
+    int rVal;
 
     // detect if args has a directory listed
     if(dir[1] != NULL) {
       dirNameSize = sizeof(char) * (strlen(dir[1]) + 1);
-      // pathDirNameSize = homeDirNameSize + dirNameSize + 1;  // +1 for /
       pathDirNameSize = dirNameSize;
       path = (char*) malloc(pathDirNameSize);
       if(path == NULL) {
        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
       }
       strncpy(path, dir[1], dirNameSize);
-      // snprintf(path, pathDirNameSize, "%s/%s", home, dir[1]);
-      // strncpy(path, home, homeDirNameSize);
-      // strncat(path, dir[1], dirNameSize);
     } else {
-      // path = home;
-       // 1. get env
       envPtr = getenv("HOME");
-      // fprintf(stderr, "%s: getenv(\"HOME\"): %s", METHOD_NAME, envPtr);
       if(envPtr == NULL) {
-      // 1.1 if getenv is null
-      // then getuid
-      // and get pwuid
-      // to find home directory
         uid_t uid = getuid();
         struct passwd *pwuid = getpwuid(uid);
         char* pwDir = pwuid->pw_dir;
@@ -134,23 +114,15 @@
         strncpy(path, envPtr, pathDirNameSize);
       }
     }
-
-    // fprintf(stderr, "%s: home path: %s\n", METHOD_NAME, home);
-    fprintf(stderr, "%s: full path: %s\n", METHOD_NAME, path);
-
-    // then call chdir
+    // fprintf(stderr, "%s: full path: %s\n", METHOD_NAME, path);
     errno = 0;
-    // print error if fails
-    // use chdir system call
-    retVal = chdir(path);
-
-    if(retVal == -1) {
-      perror("chdir");
+    rVal = chdir(path);
+    if(rVal == -1) {
+      perror("chdir");  // print error from errno
     }
 
-    // free(home);
     free(path);
-    return retVal;
+    return rVal;
   }
 
   /*
@@ -165,20 +137,15 @@
    */
   char **cmd_parse(char const *line) {
     const char *METHOD_NAME = "cmd_parse";
-    // UNUSED(line);
-    // return NULL;
     const long ARG_MAX = sysconf(_SC_ARG_MAX);
-    // fprintf(stderr, "%s: _SC_ARG_MAX: %ld\n", METHOD_NAME, ARG_MAX);
+    char *tok;
+    int ii = 0;
 
-    // char **cmd = (char**) malloc(sizeof(char*) * ARG_MAX);
     char **cmd = (char**) calloc(ARG_MAX, sizeof(char*));   // calloc to ensure everything else is initalized null
     if(cmd == NULL) {
       fprintf(stderr, "%s: could not allocate strings\n", METHOD_NAME);
     }
-    char *tok;
-    int ii = 0;
-
-    char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
+        char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
     if(lines == NULL) {
       fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
     }
@@ -186,7 +153,7 @@
 
     // init the loop
     tok = strtok(lines, " ");   // tokenize on spaces
-    while(tok != NULL) {  // Null returned at end of string
+    while(tok != NULL) {        // null returned at end of string
       cmd[ii] = (char*) malloc(sizeof(char) * (strlen(tok) + 1));
       if(cmd[ii] == NULL) {
         fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
@@ -206,10 +173,8 @@
    * @param line the line to free
    */
   void cmd_free(char ** line) {
-    // UNUSED(line);
     const long ARG_MAX = sysconf(_SC_ARG_MAX);
     int size = ARG_MAX;
-    // int size = sizeof(line) / sizeof(line[0]);  // should be like, size of entire and size of ptrs
     for(int ii = 0; ii < size; ii++) {
       if(line[ii] != NULL) {
         free(line[ii]);
@@ -228,8 +193,6 @@
    * @return The new line with no whitespace
    */
   char *trim_white(char *line) {
-    // UNUSED(line);
-    // return NULL;
     const char *METHOD_NAME = "trim_white";
     int start;
     int end;
@@ -254,7 +217,7 @@
 
     jj = 0;
     for(ii = start; ii < end; ii++) {
-      trimmed[jj] = line[ii];
+      trimmed[jj] = line[ii];   // copy only valid parts of string
       jj++;
     }
     trimmed[jj] = '\0';   // add null terminator
@@ -262,7 +225,6 @@
     // copy trimmed into line, so that trimmed can be free'd
     strncpy(line, trimmed, size);
     free(trimmed);
-
     return line;
   }
 
@@ -279,9 +241,6 @@
    * @return True if the command was a built in command
    */
   bool do_builtin(struct shell *sh, char **argv) {
-    // UNUSED(sh);
-    // UNUSED(argv);
-    // return false;
     const char *METHOD_NAME = "do_builtin";
     const char *EXIT = "exit";
     const char *CD = "cd";
@@ -292,7 +251,7 @@
     if(strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
       fprintf(stderr, "%s: exiting...\n", METHOD_NAME);
       isBuiltIn = true;
-      sh_destroy(sh);
+      sh_destroy(sh);   // FIXY issue
       exit(0);
     }
     if(strncmp(argv[0], CD, strlen(CD) + 1) == 0) {

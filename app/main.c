@@ -81,11 +81,14 @@ int main(int argc, char * argv[]) {
     sh.shell_tmodes.c_ospeed = 0xf;
 
     sh.shell_terminal = 0;
-    sh.prompt = get_prompt("MY_PROMPT");
+    sh.prompt = get_prompt("MY_PROMPT");    // FIXY needs to check for is null
   // ---> ignore, probably
 
   // setup ps
   char *ps = (char*) malloc(sizeof(char) * (strlen(sh.prompt) + 2));
+  if(ps == NULL) {
+    fprintf(stderr, "could not allocate string\n");
+  }
   snprintf(ps, sizeof(char) * (strlen(sh.prompt) + 2), "%s ", sh.prompt);
   
   using_history();
