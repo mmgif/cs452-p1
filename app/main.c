@@ -11,9 +11,33 @@
 #include "../src/lab.h"
 
 // void initialize_readline(void);
+// char *rl_gets(char *buffer, const char *prompt);
 
-int main(int argc, char * argv[])
-{
+
+ /* Read a string, and return a pointer to it.
+   Returns NULL on EOF. */
+char *rl_gets(char *buffer, const char *prompt) {
+  /* If the buffer has already been allocated,
+     return the memory to the free pool. */
+  if (buffer)
+    {
+      free (buffer);
+      buffer = (char *)NULL;
+    }
+
+  /* Get a line from the user. */
+  buffer = readline(prompt);
+
+  /* If the line has any text in it,
+     save it on the history. */
+  if (buffer && *buffer)
+    add_history (buffer);
+
+  return (buffer);
+} 
+
+
+int main(int argc, char * argv[]) {
   printf("hello world\n");
 
   struct shell sh;

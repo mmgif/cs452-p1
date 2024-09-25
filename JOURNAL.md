@@ -6,11 +6,14 @@
 * if AI tools for debugging, need to paste snapshots of prompts in summary
 
 ## Questions
+* what do we do with the shell struct, how should it be initialized?
+* if I do not free the shell, it complains to me about lost memory, if I do free the shell, it tells me I cannot free non malloc'd items
 
 ## Issues
 
 ## Notes
 * sleepy
+* https://stackoverflow.com/questions/298510/how-to-get-the-current-directory-in-a-c-program
 
 ### 2024-08-23
 * https://stackoverflow.com/questions/5935933/dynamically-create-an-array-of-strings-with-malloc

@@ -383,8 +383,11 @@
    * @param sh
    */
   void sh_destroy(struct shell *sh) {
-    free(sh->prompt);
-    free(sh);
+    if(sh != NULL) {
+      free(sh->prompt);   // FIXY still not free
+      free(sh);
+      sh = NULL;
+    }
   }
 
   /*
