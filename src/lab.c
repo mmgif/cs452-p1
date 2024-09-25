@@ -305,6 +305,14 @@
     }
     if(strncmp(argv[0], HISTORY, strlen(HISTORY) + 1) == 0) {
       fprintf(stderr, "%s: showing hist...\n", METHOD_NAME);
+      HIST_ENTRY **hist = history_list();
+      if(hist == NULL) {
+        fprintf(stderr, "%s: no history\n", METHOD_NAME);
+      } else {
+        for(int ii = 0; ii < history_length; ii++) {
+          fprintf(stdout, "%-3d %s\n", ii, hist[ii]->line);
+        }
+      }
     }
 
     return isBuiltIn;

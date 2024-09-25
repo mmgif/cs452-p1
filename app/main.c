@@ -75,7 +75,7 @@ int main(int argc, char * argv[])
       // TODO execvp system call 
     }
 
-    if(line && *line) {
+    if(line && *line) { // FIXY does this go before or after parsing command? maybe we should know we added a line before
       add_history(line);
     }
     
