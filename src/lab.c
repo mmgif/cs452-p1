@@ -12,6 +12,7 @@
 
 #include "lab.h"
 
+#define MAX_FILEPATH_SIZE 4096 
 //   struct shell
 //   {
 //     int shell_is_interactive;
@@ -123,6 +124,7 @@
     if(dir[1] != NULL) {  // FIXY this will depend on what is passed in
       // FIXY need to check if this starts with a / (detect root)
       // FIXY need current working directory...
+      // FIXY need to rework the ideas of this...
       // getcwd()?
       dirNameSize = sizeof(char) * (strlen(dir[1]) + 1);
       pathDirNameSize = homeDirNameSize + dirNameSize + 1;  // +1 for /
@@ -151,7 +153,6 @@
 
     if(retVal == -1) {
       perror("chdir");
-      // TODO exit?? print?? idk
     }
 
     free(home);
@@ -296,25 +297,27 @@
 
     if(strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
       fprintf(stderr, "%s: exiting...\n", METHOD_NAME);
+      isBuiltIn = true;
       sh_destroy(sh);
       exit(0);
     }
     if(strncmp(argv[0], CD, strlen(CD) + 1) == 0) {
       fprintf(stderr, "%s: changing dir...\n", METHOD_NAME);
+      isBuiltIn = true;
       change_dir(argv);
     }
     if(strncmp(argv[0], HISTORY, strlen(HISTORY) + 1) == 0) {
       fprintf(stderr, "%s: showing hist...\n", METHOD_NAME);
+      isBuiltIn = true;
       HIST_ENTRY **hist = history_list();
       if(hist == NULL) {
         fprintf(stderr, "%s: no history\n", METHOD_NAME);
       } else {
         for(int ii = 0; ii < history_length; ii++) {
-          fprintf(stdout, "%-3d %s\n", ii, hist[ii]->line);
+          fprintf(stdout, "  %-3d   %s\n", ii, hist[ii]->line);
         }
       }
     }
-
     return isBuiltIn;
   }
 

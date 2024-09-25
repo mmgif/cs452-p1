@@ -1,3 +1,6 @@
+/*
+ * TODO doc comment
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,6 +69,9 @@ int main(int argc, char * argv[])
     // if readline encounters EOF, line is empty at point and (char*) NULL is returned
     // FIXY does not respond to ctrl+d (EOF)
     
+    if(line && *line) {   // goes before parsing command, so it shows in history
+      add_history(line);
+    }
 
     // printf("%s\n", line);
 //    replace above with call to parse line
@@ -73,10 +79,6 @@ int main(int argc, char * argv[])
   //  returns the line read in a format suitable for execution
     if(!do_builtin(&sh, cmd)) {
       // TODO execvp system call 
-    }
-
-    if(line && *line) { // FIXY does this go before or after parsing command? maybe we should know we added a line before
-      add_history(line);
     }
     
     cmd_free(cmd);
