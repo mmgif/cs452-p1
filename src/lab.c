@@ -82,68 +82,61 @@
     // return -1;
     const char *METHOD_NAME = "change_dir";
 
-    int homeDirNameSize;
+    // int homeDirNameSize;
     int pathDirNameSize;
     int dirNameSize;
     char *path;
-    char *home;
+    // char *home;
     char *envPtr;
     int retVal;
     // uid_t uid;
     // struct passwd pwuid;
 
-    // 1. get env
-    envPtr = getenv("HOME");
-    // fprintf(stderr, "%s: getenv(\"HOME\"): %s", METHOD_NAME, envPtr);
-    if(envPtr == NULL) {
-    // 1.1 if getenv is null
-    // then getuid
-    // and get pwuid
-    // to find home directory
-      uid_t uid = getuid();
-      struct passwd *pwuid = getpwuid(uid);
-      char* pwDir = pwuid->pw_dir;
-
-      homeDirNameSize = sizeof(char) * (strlen(pwDir) + 1);
-      home = (char*) malloc(homeDirNameSize);
-      if(home == NULL) {
-        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
-      }
-      strncpy(home, pwDir, homeDirNameSize);
-    } else {
-      homeDirNameSize = sizeof(char) * (strlen(envPtr) + 1);
-      home = (char*) malloc(homeDirNameSize);
-      if(home == NULL) {
-        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
-      }
-      strncpy(home, envPtr, homeDirNameSize);
-    }
-
     // detect if args has a directory listed
-    // append directory to home directory
-    if(dir[1] != NULL) {  // FIXY this will depend on what is passed in
-      // FIXY need to check if this starts with a / (detect root)
-      // FIXY need current working directory...
-      // FIXY need to rework the ideas of this...
-      // getcwd()?
+    if(dir[1] != NULL) {
       dirNameSize = sizeof(char) * (strlen(dir[1]) + 1);
-      pathDirNameSize = homeDirNameSize + dirNameSize + 1;  // +1 for /
+      // pathDirNameSize = homeDirNameSize + dirNameSize + 1;  // +1 for /
+      pathDirNameSize = dirNameSize;
       path = (char*) malloc(pathDirNameSize);
       if(path == NULL) {
        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
       }
-      // need to append / between home and next path
-      // does change dir do relatives?
-      snprintf(path, pathDirNameSize, "%s/%s", home, dir[1]);
+      strncpy(path, dir[1], dirNameSize);
+      // snprintf(path, pathDirNameSize, "%s/%s", home, dir[1]);
       // strncpy(path, home, homeDirNameSize);
       // strncat(path, dir[1], dirNameSize);
     } else {
-      path = home;
+      // path = home;
+       // 1. get env
+      envPtr = getenv("HOME");
+      // fprintf(stderr, "%s: getenv(\"HOME\"): %s", METHOD_NAME, envPtr);
+      if(envPtr == NULL) {
+      // 1.1 if getenv is null
+      // then getuid
+      // and get pwuid
+      // to find home directory
+        uid_t uid = getuid();
+        struct passwd *pwuid = getpwuid(uid);
+        char* pwDir = pwuid->pw_dir;
+
+        pathDirNameSize = sizeof(char) * (strlen(pwDir) + 1);
+        path = (char*) malloc(pathDirNameSize);
+        if(path == NULL) {
+          fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+        }
+        strncpy(path, pwDir, pathDirNameSize);
+      } else {
+        pathDirNameSize = sizeof(char) * (strlen(envPtr) + 1);
+        path = (char*) malloc(pathDirNameSize);
+        if(path == NULL) {
+          fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+        }
+        strncpy(path, envPtr, pathDirNameSize);
+      }
     }
 
     // fprintf(stderr, "%s: home path: %s\n", METHOD_NAME, home);
     fprintf(stderr, "%s: full path: %s\n", METHOD_NAME, path);
-
 
     // then call chdir
     errno = 0;
@@ -155,7 +148,8 @@
       perror("chdir");
     }
 
-    free(home);
+    // free(home);
+    free(path);
     return retVal;
   }
 
