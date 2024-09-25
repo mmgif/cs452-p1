@@ -52,30 +52,30 @@ int main(int argc, char * argv[]) {
     
     // set up the termios struct??
     // generated from onyx defaults
-    sh.shell_tmodes.c_iflag = 0x6d02;
+    sh.shell_tmodes.c_iflag = 0x4d00;
     sh.shell_tmodes.c_oflag = OPOST | ONLCR;   // 0x5
-    sh.shell_tmodes.c_cflag = 0x4bf;
+    sh.shell_tmodes.c_cflag = 0xbf;
     sh.shell_tmodes.c_lflag = 0x8a3b;
     sh.shell_tmodes.c_line = 0x0;
 
     // there are only 17 defined control characters
     sh.shell_tmodes.c_cc[0] = VKILL;   // 0x3
     sh.shell_tmodes.c_cc[1] = 0x1c;
-    sh.shell_tmodes.c_cc[2] = 0x7f;
+    sh.shell_tmodes.c_cc[2] = 0x8;
     sh.shell_tmodes.c_cc[3] = 0x15;
     sh.shell_tmodes.c_cc[4] = VEOF;    // 0x4
     sh.shell_tmodes.c_cc[5] = VINTR;   // 0x0
-    sh.shell_tmodes.c_cc[6] = VERASE;  // 0x1
+    sh.shell_tmodes.c_cc[6] = VQUIT;  // 0x1
     sh.shell_tmodes.c_cc[7] = VINTR;   // 0x0
     sh.shell_tmodes.c_cc[8] = 0x11;
     sh.shell_tmodes.c_cc[9] = 0x13;
     sh.shell_tmodes.c_cc[10] = 0x1a;
-    sh.shell_tmodes.c_cc[11] = 0xff;
+    sh.shell_tmodes.c_cc[11] = 0x0;
     sh.shell_tmodes.c_cc[12] = 0x12;
     sh.shell_tmodes.c_cc[13] = VLNEXT; // 0xf
     sh.shell_tmodes.c_cc[14] = 0x17;
     sh.shell_tmodes.c_cc[15] = 0x16;
-    sh.shell_tmodes.c_cc[16] = 0xff;
+    sh.shell_tmodes.c_cc[16] = 0x0;
 
     sh.shell_tmodes.c_ispeed = 0xf;
     sh.shell_tmodes.c_ospeed = 0xf;
