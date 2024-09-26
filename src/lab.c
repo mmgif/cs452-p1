@@ -34,7 +34,7 @@
    * @return const char* The prompt
    */
   char *get_prompt(const char *env) {
-    const char *METHOD_NAME = "get_prompt";
+    const char *FUNC_NAME = "get_prompt";
     char defaultPrompt[] = "shell>";
     char *prompt;
     char *envPtr;
@@ -48,7 +48,7 @@
     if(envPtr != NULL) {
       prompt = (char*)malloc(sizeof(char) * (strlen(envPtr) + 1));
       if(prompt == NULL) {
-        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+        fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
         return NULL;
       }
       // fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
@@ -56,7 +56,7 @@
     } else {    // use default prompt "shell>" 
       prompt = (char*)malloc(sizeof(char) * (strlen(defaultPrompt) + 1));
       if(prompt == NULL) {
-          fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+          fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
           return NULL;
         }
         // fprintf(stderr, "%s: allocated string\n", METHOD_NAME);
@@ -76,7 +76,7 @@
    * errno is set to indicate the error.
    */
   int change_dir(char **dir) {
-    const char *METHOD_NAME = "change_dir";
+    const char *FUNC_NAME = "change_dir";
     int pathDirNameSize;
     int dirNameSize;
     char *path;
@@ -89,7 +89,7 @@
       pathDirNameSize = dirNameSize;
       path = (char*) malloc(pathDirNameSize);
       if(path == NULL) {
-       fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+       fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
       }
       strncpy(path, dir[1], dirNameSize);
     } else {
@@ -102,14 +102,14 @@
         pathDirNameSize = sizeof(char) * (strlen(pwDir) + 1);
         path = (char*) malloc(pathDirNameSize);
         if(path == NULL) {
-          fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+          fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
         }
         strncpy(path, pwDir, pathDirNameSize);
       } else {
         pathDirNameSize = sizeof(char) * (strlen(envPtr) + 1);
         path = (char*) malloc(pathDirNameSize);
         if(path == NULL) {
-          fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+          fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
         }
         strncpy(path, envPtr, pathDirNameSize);
       }
@@ -136,18 +136,18 @@
    * @return The line read in a format suitable for exec
    */
   char **cmd_parse(char const *line) {
-    const char *METHOD_NAME = "cmd_parse";
+    const char *FUNC_NAME = "cmd_parse";
     const long ARG_MAX = sysconf(_SC_ARG_MAX);
     char *tok;
     int ii = 0;
 
     char **cmd = (char**) calloc(ARG_MAX, sizeof(char*));   // calloc to ensure everything else is initalized null
     if(cmd == NULL) {
-      fprintf(stderr, "%s: could not allocate strings\n", METHOD_NAME);
+      fprintf(stderr, "%s: could not allocate strings\n", FUNC_NAME);
     }
         char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
     if(lines == NULL) {
-      fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+      fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
     }
     strncpy(lines, line, strlen(line) + 1);
 
@@ -156,7 +156,7 @@
     while(tok != NULL) {        // null returned at end of string
       cmd[ii] = (char*) malloc(sizeof(char) * (strlen(tok) + 1));
       if(cmd[ii] == NULL) {
-        fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+        fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
       }
       strncpy(cmd[ii], tok, strlen(tok) + 1);
 
@@ -193,7 +193,7 @@
    * @return The new line with no whitespace
    */
   char *trim_white(char *line) {
-    const char *METHOD_NAME = "trim_white";
+    const char *FUNC_NAME = "trim_white";
     int start;
     int end;
     int ii = 0;
@@ -212,7 +212,7 @@
     int size = sizeof(char) * (abs(start - end) + 1);
     char *trimmed = malloc(size);  // add one for \0
     if(trimmed == NULL) {
-      fprintf(stderr, "%s: could not allocate string\n", METHOD_NAME);
+      fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
     }
 
     jj = 0;
@@ -241,7 +241,7 @@
    * @return True if the command was a built in command
    */
   bool do_builtin(struct shell *sh, char **argv) {
-    const char *METHOD_NAME = "do_builtin";
+    const char *FUNC_NAME = "do_builtin";
     const char *EXIT = "exit";
     const char *CD = "cd";
     const char *HISTORY = "history";
@@ -249,22 +249,22 @@
     bool isBuiltIn = false;
 
     if(strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
-      fprintf(stderr, "%s: exiting...\n", METHOD_NAME);
+      fprintf(stderr, "%s: exiting...\n", FUNC_NAME);
       isBuiltIn = true;
-      sh_destroy(sh);   // FIXY issue
+      sh_destroy(sh);
       exit(0);
     }
     if(strncmp(argv[0], CD, strlen(CD) + 1) == 0) {
-      fprintf(stderr, "%s: changing dir...\n", METHOD_NAME);
+      fprintf(stderr, "%s: changing dir...\n", FUNC_NAME);
       isBuiltIn = true;
       change_dir(argv);
     }
     if(strncmp(argv[0], HISTORY, strlen(HISTORY) + 1) == 0) {
-      fprintf(stderr, "%s: showing hist...\n", METHOD_NAME);
+      fprintf(stderr, "%s: showing hist...\n", FUNC_NAME);
       isBuiltIn = true;
       HIST_ENTRY **hist = history_list();
       if(hist == NULL) {
-        fprintf(stderr, "%s: no history\n", METHOD_NAME);
+        fprintf(stderr, "%s: no history\n", FUNC_NAME);
       } else {
         for(int ii = 0; ii < history_length; ii++) {
           fprintf(stdout, "  %-3d   %s\n", ii, hist[ii]->line);
@@ -285,54 +285,62 @@
    * @param sh
    */
   void sh_init(struct shell *sh) {
-    const char *METHOD_NAME = "sh_init";
-    sh = (struct shell*)malloc(sizeof(struct shell));
-    if(sh == NULL) {
-      fprintf(stderr, "%s: could not allocate shell\n", METHOD_NAME);
-    }
+    const char *FUNC_NAME = "sh_init";
+    // actually!! already initalized in main
+    // sh = (struct shell*)malloc(sizeof(struct shell));
+    // if(sh == NULL) {
+    //   fprintf(stderr, "%s: could not allocate shell\n", METHOD_NAME);
+    // }
     // fprintf(stderr, "%s: allocated shell\n", METHOD_NAME);
 
-    // ---> Below information doesn't save...
-    // sh->shell_is_interactive = 1;
-    // sh->shell_pgid = 0;
+    sh->shell_is_interactive = 0;
+    sh->shell_pgid = 0; // process group id
     
-    // // set up the termios struct??
-    // // generated from onyx defaults
-    // sh->shell_tmodes.c_iflag = 0x6d02;
-    // sh->shell_tmodes.c_oflag = OPOST | ONLCR;   // 0x5
-    // sh->shell_tmodes.c_cflag = 0x4bf;
-    // sh->shell_tmodes.c_lflag = 0x8a3b;
-    // sh->shell_tmodes.c_line = 0x0;
+    // set up the termios struct??
+    errno = 0;
+    int rVal = tcgetattr(0, &(sh->shell_tmodes));
+    if(rVal == -1) {
+      perror("tcgetattr");
+    }
 
-    // // for(int ii = 0; ii < 17; ii++) {
-    // //    sh->shell_tmodes.c_cc[ii] = ii;
-    // // }
+/*  // generated from onyx defaults
+    sh->shell_tmodes.c_iflag = 0x4d00;
+    sh->shell_tmodes.c_oflag = OPOST | ONLCR;   // 0x5
+    sh->shell_tmodes.c_cflag = 0xbf;
+    sh->shell_tmodes.c_lflag = 0x8a3b;
+    sh->shell_tmodes.c_line = 0x0;
 
-    // // there are only 17 defined control characters
-    // sh->shell_tmodes.c_cc[0] = VKILL;   // 0x3
-    // sh->shell_tmodes.c_cc[1] = 0x1c;
-    // sh->shell_tmodes.c_cc[2] = 0x7f;
-    // sh->shell_tmodes.c_cc[3] = 0x15;
-    // sh->shell_tmodes.c_cc[4] = VEOF;    // 0x4
-    // sh->shell_tmodes.c_cc[5] = VINTR;   // 0x0
-    // sh->shell_tmodes.c_cc[6] = VERASE;  // 0x1
-    // sh->shell_tmodes.c_cc[7] = VINTR;   // 0x0
-    // sh->shell_tmodes.c_cc[8] = 0x11;
-    // sh->shell_tmodes.c_cc[9] = 0x13;
-    // sh->shell_tmodes.c_cc[10] = 0x1a;
-    // sh->shell_tmodes.c_cc[11] = 0xff;
-    // sh->shell_tmodes.c_cc[12] = 0x12;
-    // sh->shell_tmodes.c_cc[13] = VLNEXT; // 0xf
-    // sh->shell_tmodes.c_cc[14] = 0x17;
-    // sh->shell_tmodes.c_cc[15] = 0x16;
-    // sh->shell_tmodes.c_cc[16] = 0xff;
+    // there are only 17 defined control characters
+    sh->shell_tmodes.c_cc[0] = VKILL;   // 0x3
+    sh->shell_tmodes.c_cc[1] = 0x1c;
+    sh->shell_tmodes.c_cc[2] = VSTART; // 0x8
+    sh->shell_tmodes.c_cc[3] = 0x15;
+    sh->shell_tmodes.c_cc[4] = VEOF;    // 0x4
+    sh->shell_tmodes.c_cc[5] = VINTR;   // 0x0
+    sh->shell_tmodes.c_cc[6] = VQUIT;  // 0x1
+    sh->shell_tmodes.c_cc[7] = VINTR;   // 0x0
+    sh->shell_tmodes.c_cc[8] = 0x11;
+    sh->shell_tmodes.c_cc[9] = 0x13;
+    sh->shell_tmodes.c_cc[10] = 0x1a;
+    sh->shell_tmodes.c_cc[11] = 0x0;
+    sh->shell_tmodes.c_cc[12] = 0x12;
+    sh->shell_tmodes.c_cc[13] = VLNEXT; // 0xf
+    sh->shell_tmodes.c_cc[14] = 0x17;
+    sh->shell_tmodes.c_cc[15] = 0x16;
+    sh->shell_tmodes.c_cc[16] = 0x0;
 
-    // sh->shell_tmodes.c_ispeed = 0xf;
-    // sh->shell_tmodes.c_ospeed = 0xf;
+    sh->shell_tmodes.c_ispeed = 0xf;
+    sh->shell_tmodes.c_ospeed = 0xf;
+*/
 
-    // sh->shell_terminal = 0;
-    // sh->prompt = get_prompt("MY_PROMPT");
-    // fprintf(stderr, "sh_init: %s\n", sh->prompt); 
+    sh->shell_terminal = 0;
+    char *prompt = get_prompt("MY_PROMPT");
+    if(prompt == NULL) {
+      fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
+      // FIXY exit?
+    }
+    sh->prompt = prompt;
+
   }
 
   /*
@@ -343,9 +351,9 @@
    */
   void sh_destroy(struct shell *sh) {
     if(sh != NULL) {
-      free(sh->prompt);   // FIXY still not free
-      free(sh);
-      sh = NULL;
+      free(sh->prompt);
+      // free(sh);
+      // sh = NULL;
     }
   }
 
