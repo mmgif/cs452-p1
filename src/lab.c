@@ -138,7 +138,7 @@
   char **cmd_parse(char const *line) {
     const char *FUNC_NAME = "cmd_parse";
     const long ARG_MAX = sysconf(_SC_ARG_MAX);
-    char *tok;  // FIXY may need to be const?, or just cast in the outside
+    char *tok;
     int ii = 0;
 
     char **cmd = (char**) calloc(ARG_MAX, sizeof(char*));   // calloc to ensure everything else is initalized null
@@ -146,7 +146,7 @@
       fprintf(stderr, "%s: could not allocate strings\n", FUNC_NAME);
     }
         char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
-    if(lines == NULL) { // FIXY may not need to allocate a new string, might be better as old,,,
+    if(lines == NULL) {
       fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
     }
     strncpy(lines, line, strlen(line) + 1);
@@ -245,7 +245,6 @@
     const char *EXIT = "exit";
     const char *CD = "cd";
     const char *HISTORY = "history";
-
     bool isBuiltIn = false;
 
     if(strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
