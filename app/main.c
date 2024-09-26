@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -46,7 +47,7 @@ int main(int argc, char * argv[]) {
   parse_args(argc, argv);
   sh_init(&sh);
 
-  // setup ps
+  // setup ps   // TODO may change this? is it leaking?
   char *ps = (char*) malloc(sizeof(char) * (strlen(sh.prompt) + 2));
   if(ps == NULL) {
     fprintf(stderr, "could not allocate string\n");
@@ -54,23 +55,35 @@ int main(int argc, char * argv[]) {
   snprintf(ps, sizeof(char) * (strlen(sh.prompt) + 2), "%s ", sh.prompt);
   
   using_history();
-  while((line = readline(ps))) {  // NOTE this should probably be fine, actually, since I fixed the exiting issues...
-    // if readline encounters EOF, line is empty at point and (char*) NULL is returned
-    // FIXY does not respond to ctrl+d (EOF)
+  while((line = readline(ps))) {
+
+    line = trim_white(line);
     
     if(line && *line) {   // goes before parsing command, so it shows in history
       add_history(line);
-    }
-
-    // printf("%s\n", line);
-//    replace above with call to parse line
-   char **cmd = cmd_parse(line);
+      
+      char **cmd = cmd_parse(line);
   //  returns the line read in a format suitable for execution
-    if(!do_builtin(&sh, cmd)) {
-      // TODO execvp system call 
-    }
+      if(!do_builtin(&sh, cmd)) {   // FIXY crying 'cuz it's null
+        // printf("%s\n", line);
+
+    // TODO if cmd ends in ampersand, then need to fork and not wait
+    // otherwise, we should always fork and wait
+        errno = 0;
+        // int rVal = execvp(cmd[0], &cmd[1]);  // complains about char*const*
+        int rVal = execvp(cmd[0], cmd);
+        // FIXY may need to be cast to (char*const*)
+        // any arguments are a bad address,,,,,
+        // runs only the first command, no arguments
+        if(rVal == -1) {
+          perror("execvp");
+        // TODO do soemthing, perhaps
+        }
+      }
     
-    cmd_free(cmd);
+      cmd_free(cmd);      
+    }
+   
     free(line);
   }
 

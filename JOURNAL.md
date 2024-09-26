@@ -9,27 +9,26 @@
 
 ## Questions and Issues
 * what do we do with the shell struct, how should it be initialized?,
-    * what does the shell mean when it says it should be in its own process group?
-    * what do the fields of the shell struct mean?, when do we set them?
+  * what does the shell mean when it says it should be in its own process group?
+  * what do the fields of the shell struct mean?, when do we set them?
 
 * is the format of my main function alright?
-
 * what do the signals mean?
-
 * what is a process tree?
-
 * are we completing task 8 (signals), task 9 (background processes), task 10 (jobs command)
-
 * format of the reflection?
-    * I will be includign references
+  * I will be includign references
 
-
-### Solved
 * if I do not free the shell, it complains to me about lost memory, if I do free the shell, it tells me I cannot free non malloc'd items
   * fixed, 2024-09-25. it's because it's being allocated in main, doesn't need to be reallocated, just the information needs to be added into the struct
 
 
 ## Notes
+
+### 2024-09-26
+* I cannot handle spaces or empty input
+  * fixed via putting all execution within the "check if this line is not null"
+* https://stackoverflow.com/questions/78125/why-cant-i-convert-char-to-a-const-char-const-in-c
 
 ### 2024-09-25
 * sleepy
