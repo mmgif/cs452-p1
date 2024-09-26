@@ -22,7 +22,6 @@
 * if I do not free the shell, it complains to me about lost memory, if I do free the shell, it tells me I cannot free non malloc'd items
   * fixed, 2024-09-25. it's because it's being allocated in main, doesn't need to be reallocated, just the information needs to be added into the struct
 
-
 ## Notes
 
 ### 2024-09-26
@@ -31,6 +30,7 @@
 * https://stackoverflow.com/questions/78125/why-cant-i-convert-char-to-a-const-char-const-in-c
 * ssh into onyx, if on lab computers, need to ssh into onyx LOL
 * https://www.geeksforgeeks.org/fork-execute-processes-bottom-using-wait/
+* need to ignore or handle commands written while process is executing?
 
 ### 2024-09-25
 * sleepy
@@ -43,7 +43,6 @@
 * getting better about adding print statements
 * checking mallocs/frees
 
-
 ### 2024-09-22
 * discovered shell init is not setting any of it variables? idk why
 * moving on to trim white space
@@ -52,7 +51,6 @@
 * https://www.digitalocean.com/community/tutorials/execvp-function-c-plus-plus
 * https://stackoverflow.com/questions/16782715/termios-default-for-standard-terminal-session
 * https://cplusplus.com/reference/cstring/strtok/
-
 
 ### 2024-09-21
 * added custom prompt

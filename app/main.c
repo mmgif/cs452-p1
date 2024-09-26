@@ -96,6 +96,8 @@ int main(int argc, char * argv[]) {
               // TODO EXIT?? or idk
             }
           } while(!WIFEXITED(wstatus)); // FIXY do I need anything else?
+          // FIXY need to exit the same amount of failed commands (spawning processes for failed excep commands?)
+          // FIXY need to ignore typed commands when processes are waiting (are these the signals?)
         }
        
       }
