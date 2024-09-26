@@ -289,12 +289,12 @@
     // actually!! already initalized in main
     // sh = (struct shell*)malloc(sizeof(struct shell));
     // if(sh == NULL) {
-    //   fprintf(stderr, "%s: could not allocate shell\n", METHOD_NAME);
+    //   fprintf(stderr, "%s: could not allocate shell\n", FUNC_NAME);
     // }
     // fprintf(stderr, "%s: allocated shell\n", METHOD_NAME);
 
     sh->shell_is_interactive = 0;
-    sh->shell_pgid = 0; // process group id
+    sh->shell_pgid = 0; // process group id FIXY waht does this MEAN
     
     // set up the termios struct??
     errno = 0;
