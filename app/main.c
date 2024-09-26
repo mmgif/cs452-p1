@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/wait.h>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -63,22 +64,40 @@ int main(int argc, char * argv[]) {
       add_history(line);
       
       char **cmd = cmd_parse(line);
-  //  returns the line read in a format suitable for execution
-      if(!do_builtin(&sh, cmd)) {   // FIXY crying 'cuz it's null
+      if(!do_builtin(&sh, cmd)) {
         // printf("%s\n", line);
-
     // TODO if cmd ends in ampersand, then need to fork and not wait
     // otherwise, we should always fork and wait
-        errno = 0;
-        // int rVal = execvp(cmd[0], &cmd[1]);  // complains about char*const*
-        int rVal = execvp(cmd[0], cmd);
-        // FIXY may need to be cast to (char*const*)
-        // any arguments are a bad address,,,,,
-        // runs only the first command, no arguments
-        if(rVal == -1) {
-          perror("execvp");
-        // TODO do soemthing, perhaps
+
+    // TODO need to do something with arg max, probably has to do with how big command parse is?,
+    // or do I already check that in cmd parse? maybe
+        pid_t cmd_pid;
+        pid_t w;
+        int wstatus;
+
+        cmd_pid = fork();
+        if(cmd_pid == -1) {
+          perror("fork");
+          // TODO error
         }
+
+        if(cmd_pid == 0) {
+          errno = 0;
+          int rVal = execvp(cmd[0], cmd);
+          if(rVal == -1) {
+            perror("execvp");
+          // TODO do soemthing, perhaps?
+          }
+        } else {
+          do {
+            w = waitpid(cmd_pid, &wstatus, 0);  // more options for zero in thhe documentation
+            if(w == -1) {
+              perror("waitpid");
+              // TODO EXIT?? or idk
+            }
+          } while(!WIFEXITED(wstatus)); // FIXY do I need anything else?
+        }
+       
       }
     
       cmd_free(cmd);      

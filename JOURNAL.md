@@ -29,6 +29,8 @@
 * I cannot handle spaces or empty input
   * fixed via putting all execution within the "check if this line is not null"
 * https://stackoverflow.com/questions/78125/why-cant-i-convert-char-to-a-const-char-const-in-c
+* ssh into onyx, if on lab computers, need to ssh into onyx LOL
+* https://www.geeksforgeeks.org/fork-execute-processes-bottom-using-wait/
 
 ### 2024-09-25
 * sleepy
