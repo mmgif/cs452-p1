@@ -5,7 +5,19 @@
 * function achieved with shell
 * if AI tools for debugging, need to paste snapshots of prompts in summary
 
-* empty commands should not cause segfault or memory leak, just display another prompt
+- [X] empty commands should not cause segfault or memory leak, just display another prompt
+
+Task 7
+* Think about using fork() to create a child process, with the parent waiting for the child to finish in the main.c. The child should replace its image with the command using execvp().
+
+Task 8
+* You want the shell to ignore signals like SIGINT and SIGTSTP, but child processes should still handle them normally. Use signal() to ignore the signals in the parent (maybe sh_init()?), and reset the default behavior in the child after fork().
+
+Task 9
+* Detects the presence of & to identify background jobs, then run these commands without waiting for them to complete. But we need to store the background process IDs for later tracking, allowing the shell to continue accepting new commands while the background job runs.
+
+Task 10
+* Store info about background jobs (PID and command) in a list or array. Use waitpid() to check if background processes have finished without blocking the shell. The jobs command should display all active background processes and their statuses.
 
 ## Questions and Issues
 * what do we do with the shell struct, how should it be initialized?,
