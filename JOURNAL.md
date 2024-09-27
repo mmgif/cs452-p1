@@ -9,13 +9,20 @@
 
 ## Questions and Issues
 * what do we do with the shell struct, how should it be initialized?,
-  * what does the shell mean when it says it should be in its own process group?
-  * what do the fields of the shell struct mean?, when do we set them?
+  -> fine to init in main and pass as ptr
 
-* is the format of my main function alright?
+  * what does the shell mean when it says it should be in its own process group?
+    -> use tcgetgrp() and tcsetgrp() to grab control of terminal
+    -> 1) use getpid() to get shell process id, 2) use setpgid() to put shell in its own group, 3) use tcsetgroup() and tcgetgrp() to assign terminal to shell 
+
+  * what do the fields of the shell struct mean?, when do we set them?
+    -> shell_is_interactive: check if shell is running interactively
+    -> shell_pgid: use setpgid() to set process group
+    -> shell_tmodes and shell_terminal: handles terminal modes and control
+
 * what do the signals mean?
 * what is a process tree?
-* are we completing task 8 (signals), task 9 (background processes), task 10 (jobs command)
+
 * format of the reflection?
   * I will be includign references
 
@@ -23,6 +30,8 @@
   * fixed, 2024-09-25. it's because it's being allocated in main, doesn't need to be reallocated, just the information needs to be added into the struct
 
 ## Notes
+
+### 2024-09-27
 
 ### 2024-09-26
 * I cannot handle spaces or empty input
