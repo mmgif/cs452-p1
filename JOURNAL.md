@@ -20,12 +20,12 @@ Task 10
 * Store info about background jobs (PID and command) in a list or array. Use waitpid() to check if background processes have finished without blocking the shell. The jobs command should display all active background processes and their statuses.
 
 ## Questions and Issues
-* what do we do with the shell struct, how should it be initialized?,
+- [X] what do we do with the shell struct, how should it be initialized?,
   -> fine to init in main and pass as ptr
 
   * what does the shell mean when it says it should be in its own process group?
     -> use tcgetgrp() and tcsetgrp() to grab control of terminal
-    -> 1) use getpid() to get shell process id, 2) use setpgid() to put shell in its own group, 3) use tcsetgroup() and tcgetgrp() to assign terminal to shell 
+    -> 1) use getpid() to get shell process id, 2) use setpgid() to put shell in its own group, 3) use tcsetgroup() and tcgetgrp() to assign terminal to shell
 
   * what do the fields of the shell struct mean?, when do we set them?
     -> shell_is_interactive: check if shell is running interactively
@@ -44,6 +44,11 @@ Task 10
 ## Notes
 
 ### 2024-09-27
+* fix multiple shell exits needed if cmd fails by exiting the child process on execvp failure
+* adding in the signals stuff
+* need to add in the pushing hte shell to its own process group, or else it DIE
+* jumping to exit after a command occurs (fail or not), something to do with line reading?
+  * probably a question of waht is in the buffer
 
 ### 2024-09-26
 * I cannot handle spaces or empty input

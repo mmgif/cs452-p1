@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <pwd.h>
 #include <errno.h>
+#include <signal.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -252,7 +253,6 @@
       fprintf(stderr, "%s: exiting...\n", FUNC_NAME);
       isBuiltIn = true;
       sh_destroy(sh);
-      exit(0);
     }
     if(strncmp(argv[0], CD, strlen(CD) + 1) == 0) {
       fprintf(stderr, "%s: changing dir...\n", FUNC_NAME);
@@ -292,16 +292,50 @@
     //   fprintf(stderr, "%s: could not allocate shell\n", FUNC_NAME);
     // }
     // fprintf(stderr, "%s: allocated shell\n", METHOD_NAME);
+    int rVal;
 
-    sh->shell_is_interactive = 0;
-    sh->shell_pgid = 0; // process group id FIXY waht does this MEAN
-    
+    // are we running interactively (still dont' knwo what this means!!)
+    sh->shell_terminal = STDIN_FILENO;
+    sh->shell_is_interactive = isatty(sh->shell_terminal);
+
+    if(sh->shell_is_interactive) {
+      // loop until in the foreground (round robin++)
+      while(tcgetpgrp(sh->shell_terminal) != (sh->shell_pgid = getpgrp())) {
+        kill(- sh->shell_pgid, SIGTTIN);
+      }
+
+      // Shell ignores these signals
+      signal(SIGINT, SIG_IGN);
+      signal(SIGQUIT, SIG_IGN);
+      signal(SIGTSTP, SIG_IGN);
+      signal(SIGTTIN, SIG_IGN);
+      signal(SIGTTOU, SIG_IGN);
+
+      // put shell in own process group
+      sh->shell_pgid = getpid();
+      errno = 0;
+      rVal = setpgid(sh->shell_pgid, sh->shell_pgid);
+      if(rVal == -1) {
+        perror("setpgid");
+        fprintf(stderr, "%s: could not put shell in its own process group\n", FUNC_NAME);
+        exit(1);
+      }
+
+     // use tcsetpgrp() to grab control of terminal
+   errno = 0;
+   rVal = tcsetpgrp(sh->shell_terminal, sh->shell_pgid);
+   if(rVal == -1) {
+    perror("tcsetpgrp");
+   }
+
+    // use tcgetattr() to save default teminal attributes for shell
     // set up the termios struct??
     errno = 0;
-    int rVal = tcgetattr(0, &(sh->shell_tmodes));
+    rVal = tcgetattr(sh->shell_terminal, &(sh->shell_tmodes));
     if(rVal == -1) {
       perror("tcgetattr");
     }
+   }
 
 /*  // generated from onyx defaults
     sh->shell_tmodes.c_iflag = 0x4d00;
@@ -333,14 +367,12 @@
     sh->shell_tmodes.c_ospeed = 0xf;
 */
 
-    sh->shell_terminal = 0;
     char *prompt = get_prompt("MY_PROMPT");
     if(prompt == NULL) {
       fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
       // FIXY exit?
     }
     sh->prompt = prompt;
-
   }
 
   /*
@@ -354,6 +386,7 @@
       free(sh->prompt);
       // free(sh);
       // sh = NULL;
+      exit(0);
     }
   }
 
