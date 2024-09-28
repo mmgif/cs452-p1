@@ -86,7 +86,8 @@ int main(int argc, char * argv[]) {
           int rVal = execvp(cmd[0], cmd);
           if(rVal == -1) {
             perror("execvp");
-          // TODO do soemthing, perhaps?
+            sh_destroy(&sh);
+            exit(rVal);
           }
         } else {
           do {
