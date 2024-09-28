@@ -139,11 +139,11 @@
     const char *FUNC_NAME = "cmd_parse";
     const long ARG_MAX = sysconf(_SC_ARG_MAX);
     char *tok;
-    int ii = 0;
+    int ii;
 
     char **cmd = (char**) calloc(ARG_MAX, sizeof(char*));   // calloc to ensure everything else is initalized null
     if(cmd == NULL) {
-      fprintf(stderr, "%s: could not allocate strings\n", FUNC_NAME);
+      fprintf(stderr, "%s: could not allocate array of strings\n", FUNC_NAME);
     }
         char * lines = (char*) malloc(sizeof(char) * (strlen(line) + 1));
     if(lines == NULL) {
@@ -152,8 +152,9 @@
     strncpy(lines, line, strlen(line) + 1);
 
     // init the loop
+    ii = 0;
     tok = strtok(lines, " ");   // tokenize on spaces
-    while(tok != NULL) {        // null returned at end of string
+    while(tok != NULL && ii < ARG_MAX) {        // null returned at end of string
       cmd[ii] = (char*) malloc(sizeof(char) * (strlen(tok) + 1));
       if(cmd[ii] == NULL) {
         fprintf(stderr, "%s: could not allocate string\n", FUNC_NAME);
