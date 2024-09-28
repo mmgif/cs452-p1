@@ -48,11 +48,8 @@ int main(int argc, char * argv[]) {
   parse_args(argc, argv);
   sh_init(&sh);
 
-  // setup ps   // TODO may change this? is it leaking?
-  char *ps = (char*) malloc(sizeof(char) * (strlen(sh.prompt) + 2));
-  if(ps == NULL) {
-    fprintf(stderr, "could not allocate string\n");
-  }
+  // setup ps
+  char ps[(sizeof(char) * (strlen(sh.prompt) + 2))];
   snprintf(ps, sizeof(char) * (strlen(sh.prompt) + 2), "%s ", sh.prompt);
   
   using_history();
@@ -110,7 +107,7 @@ int main(int argc, char * argv[]) {
   }
 
   sh_destroy(&sh);
-  free(ps);
+  // free(ps);
   // free(sh.prompt);
   // free(&sh);
 
