@@ -43,12 +43,16 @@ Task 10
 
 ## Notes
 
+### 2024-09-28
+
+
 ### 2024-09-27
 * fix multiple shell exits needed if cmd fails by exiting the child process on execvp failure
 * adding in the signals stuff
 * need to add in the pushing hte shell to its own process group, or else it DIE
 * jumping to exit after a command occurs (fail or not), something to do with line reading?
   * probably a question of waht is in the buffer
+  * 2024-09-28: nah, it had to do with relinquishign control to the child process and never askign for it back :thumbsup:
 
 ### 2024-09-26
 * I cannot handle spaces or empty input

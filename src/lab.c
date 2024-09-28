@@ -297,6 +297,7 @@
     // are we running interactively (still dont' knwo what this means!!)
     sh->shell_terminal = STDIN_FILENO;
     sh->shell_is_interactive = isatty(sh->shell_terminal);
+    // fprintf(stderr, "%s: is shell interactive?: %d\n", FUNC_NAME, sh->shell_is_interactive);
 
     if(sh->shell_is_interactive) {
       // loop until in the foreground (round robin++)
@@ -328,7 +329,7 @@
     perror("tcsetpgrp");
    }
 
-    // use tcgetattr() to save default teminal attributes for shell
+    // use tcgetattr() to save default terminal attributes for shell
     // set up the termios struct??
     errno = 0;
     rVal = tcgetattr(sh->shell_terminal, &(sh->shell_tmodes));
@@ -408,6 +409,7 @@
             break;
         default:  // invalid arg
             // error handling: getopt prints its own errors for invalid option, so cute!
+            exit(1);
         break;
         }
     }

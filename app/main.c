@@ -13,33 +13,6 @@
 
 #include "../src/lab.h"
 
-// void initialize_readline(void);
-// char *rl_gets(char *buffer, const char *prompt);
-
-
- /* Read a string, and return a pointer to it.
-   Returns NULL on EOF. */
-char *rl_gets(char *buffer, const char *prompt) {
-  /* If the buffer has already been allocated,
-     return the memory to the free pool. */
-  if (buffer)
-    {
-      free (buffer);
-      buffer = (char *)NULL;
-    }
-
-  /* Get a line from the user. */
-  buffer = readline(prompt);
-
-  /* If the line has any text in it,
-     save it on the history. */
-  if (buffer && *buffer)
-    add_history (buffer);
-
-  return (buffer);
-} 
-
-
 int main(int argc, char * argv[]) {
   printf("hello world\n");
 
@@ -70,8 +43,8 @@ int main(int argc, char * argv[]) {
     // TODO need to do something with arg max, probably has to do with how big command parse is?,
     // or do I already check that in cmd parse? maybe
         pid_t cmdPid;
-        pid_t w;
-        int wStatus;
+        pid_t wait;
+        int waitStatus;
 
         cmdPid = fork();
         if(cmdPid == -1) {
@@ -107,21 +80,48 @@ int main(int argc, char * argv[]) {
             sh_destroy(&sh);
             exit(rVal);
           }
-        } else {  // this is the parent process
+        } else if (cmdPid > 0) {  // this is the parent process
+          int rVal;
+          // need to set pgid from parent of child?
+          errno = 0;
+          rVal = setpgid(cmdPid, cmdPid);
+          if(rVal == -1) {
+            perror("setpgid");
+          }
+
+          // need to put child into foreground with tcsetgrp
+          errno = 0;
+          rVal = tcsetpgrp(sh.shell_terminal, cmdPid);
+          if(rVal == -1) {
+            perror("tcsetpgrp");
+          }
+        
           do {
-            w = waitpid(cmdPid, &wStatus, 0);  // more options for zero in the documentation
-            if(w == -1) {
+            wait = waitpid(cmdPid, &waitStatus, 0);  // more options for zero in the documentation
+            if(wait == -1) {
               perror("waitpid");
               // TODO EXIT?? or idk
             }
           // FIXY kinda works? but not what I want... have to press enter to move forward. stupid.
-          // char c = getchar();
-          // while(c != '\n' && c != EOF) {
-            // c = getchar();
-          // }
-          } while(!WIFEXITED(wStatus) && !WIFSIGNALED(wStatus)); // FIXY do I need anything else?
+          char c = getchar();
+          while(c != '\n' && c != EOF) {
+            c = getchar();
+          }
+          // TODO ALSO not CONSUMING anything!!
+          } while(!WIFEXITED(waitStatus) && !WIFSIGNALED(waitStatus)); // FIXY do I need anything else?
           // FIXY need to exit the same amount of failed commands (spawning processes for failed excep commands?)
           // FIXY need to ignore typed commands when processes are waiting (are these the signals?)
+
+          // need to get back the process group? yes!
+             errno = 0;
+            rVal = tcsetpgrp(sh.shell_terminal, sh.shell_pgid);
+            if(rVal == -1) {
+              perror("tcsetpgrp");
+            }
+          //             char c = getchar(); // TODO need to hit enter to move forward
+          // while(c != '\n' && c != EOF) {
+          //   c = getchar();
+          // }
           
         }
        
@@ -134,15 +134,6 @@ int main(int argc, char * argv[]) {
   }
 
   fprintf(stderr, "free me"); // FIXY jumping to here after a command occurs (fail or not), something to do with line reading?
-
   sh_destroy(&sh);
-  // free(ps);
-  // free(sh.prompt);
-  // free(&sh);
-
   return 0;
 }
-
-// void initialize_readline() {
-  // rl_bind_key('\t', rl_insert);
-// }
