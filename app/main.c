@@ -1,5 +1,9 @@
 /*
- * TODO doc comment
+ * File: main.c
+ * Author: Emma Gifford
+ * Date: Sun Sep 29 17:22:23 MDT 2024
+ * Description: Runs an interactive simple shell program
+ *    which can start background processes
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +38,6 @@ int main(int argc, char *argv[]) {
   char *line;
   int bgPidsNum = 0;
   int bgPidsCapacity = 255;
-  // pid_t bgPids[bgPidsSize];
   struct bgPid bgPids[bgPidsCapacity];
   int jobNum = 1;
   bool bg;
@@ -48,73 +51,63 @@ int main(int argc, char *argv[]) {
 
   using_history();
   while ((line = readline(ps))) {
-
     line = trim_white(line);
     bg = false;
 
-    if (line && *line) { // goes before parsing command, so it shows in history
-      add_history(line);
+    if (line && *line) {
+      add_history(line);  // goes before parsing command, so it shows in history
 
-      // fprintf(stderr, "are you what I think you are? %c\n", line[strlen(line) - 1]);
       if (line[strlen(line) - 1] == '&') {
         bg = true;
-        // fprintf(stderr, "now you're in the background\n");
-        // trim ampersand so command runs proper
-        line[strlen(line) - 1] = '\0';
+        line[strlen(line) - 1] = '\0';  // trim ampersand so command runs proper
       }
 
       char **cmd = cmd_parse(line);
 
-      // check for jobs here, so we can append the list of jobs to the cmd before it is decomposed ?
-      // or as it is decomposed, remake it :pensive:
-      if (strncmp(cmd[0], JOBS, strlen(JOBS) + 1) == 0 /*&& bgPidsNum != 0*/) {
-        int padding = 20; // brackets, job num, DONE, spaces (11?)
-        char tmpPid[12];
-        int bgPidsLen = bgPidsNum;
+      // if the cmd is "jobs", append jobs display to the cmd before passing to do_builtin
+      if (strncmp(cmd[0], JOBS, strlen(JOBS) + 1) == 0) {
+        int padding = 50; // brackets, job num, DONE, RUNNING, spaces
+        char tmpPid[12];  // anywhere between 2 and 12
 
         char **newCmd = (char **)calloc(ARG_MAX, sizeof(char *));
         if (newCmd == NULL) {
           fprintf(stderr, "could not allocate array of strings\n");
         }
+
         newCmd[0] = (char *)malloc(sizeof(char) * (strlen(JOBS) + 1));
         if (newCmd[0] == NULL) {
           fprintf(stderr, "could not allocate string\n");
         }
         strncpy(newCmd[0], JOBS, strlen(JOBS) + 1);
 
-        for (int ii = 0; ii < bgPidsLen; ii++)
-        {
+        for (int ii = 0; ii < bgPidsNum; ii++) {
           int pidLen = snprintf(tmpPid, 12, "%d", bgPids[ii].pid);
-          if (pidLen == -1)
-          {
-            fprintf(stderr, "could not get decimal representation of pid len\n");
+          if (pidLen == -1) {
+            fprintf(stderr, "could not get decimal representation length of pid\n");
+            pidLen = 12;
           }
-          int size = sizeof(char) * strlen(bgPids[ii].cmd) + pidLen + padding + 1;
-          // int size = sizeof(char) * strlen(bgPids[ii].cmd) + 20 + padding + 1;
+          int size = sizeof(char) * (strlen(bgPids[ii].cmd) + pidLen + padding + 1);
 
-          //  char* buffer = (char*) malloc(size);
           newCmd[ii + 1] = (char *)calloc(size / sizeof(char), sizeof(char));
           if (newCmd[ii + 1] == NULL) {
             fprintf(stderr, "could not allocate string\n");
           }
-          if (!bgPids[ii].seenDone) {
+          if (!bgPids[ii].seenDone) { // append to the list only if the process is running, or has not been seen done
             if (bgPids[ii].done) {
               snprintf(newCmd[ii + 1], size, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
               bgPids[ii].seenDone = true;
             } else {
-              snprintf(newCmd[ii + 1], size, "[%d] Running %d %s\n", bgPids[ii].job, bgPids[ii].pid, bgPids[ii].cmd);
+              snprintf(newCmd[ii + 1], size, "[%d] %d Running %s\n", bgPids[ii].job, bgPids[ii].pid, bgPids[ii].cmd);
             }
           }
         }
 
-        // assign templine to cmd, free old cmd
         char **oldCmd = cmd;
         cmd = newCmd;
         cmd_free(oldCmd);
       }
 
       if (!do_builtin(&sh, cmd)) {
-        // printf("%s\n", line);
         pid_t cmdPid;
         pid_t wait;
         int waitStatus;
@@ -122,7 +115,6 @@ int main(int argc, char *argv[]) {
         cmdPid = fork();
         if (cmdPid == -1) {
           perror("fork");
-          // FIXY error
         }
 
         if (cmdPid == 0) { // this is inside the child process
@@ -159,44 +151,40 @@ int main(int argc, char *argv[]) {
         }
         else if (cmdPid > 0) { // this is the parent process
           int rVal;
-          // need to set pgid from parent of child?
+          // set pgid from parent of child
           errno = 0;
           rVal = setpgid(cmdPid, cmdPid);
           if (rVal == -1) {
             perror("setpgid");
           }
 
-          // need to put child into foreground with tcsetgrp
-          if (!bg) {
+          if (!bg) {  // put child into foreground with tcsetgrp
             errno = 0;
             rVal = tcsetpgrp(sh.shell_terminal, cmdPid);
             if (rVal == -1) {
               perror("tcsetpgrp");
             }
 
-            do {
-              wait = waitpid(cmdPid, &waitStatus, 0); // more options for zero in the documentation
+            do {  // wait for process to finish
+              wait = waitpid(cmdPid, &waitStatus, 0);
               if (wait == -1) {
                 perror("waitpid");
-                // TODO EXIT?? or idk
               }
             } while (!WIFEXITED(waitStatus) && !WIFSIGNALED(waitStatus));
 
-            // need to get back the process group? yes!
+            // return shell to foreground
             errno = 0;
             rVal = tcsetpgrp(sh.shell_terminal, sh.shell_pgid);
             if (rVal == -1) {
               perror("tcsetpgrp");
             }
-            // TODO do I also need to restore tmodes? I never take them out
 
             // flush the input, do not remember anything typed while command was executing
             tcflush(sh.shell_terminal, TCIOFLUSH);
           } else {
-            // TODO we do something here to handle background processes
+            // handle a process being set as a background process
             if (bgPidsNum >= bgPidsCapacity) {
-              // bgPids = expand_bgPids(bgPids, bgPidsCapacity);
-              fprintf(stderr, "expand bgpids pls\n");
+              fprintf(stderr, "maximum number of background processes reached\n");
             }
 
             bgPids[bgPidsNum].job = jobNum;
@@ -206,9 +194,8 @@ int main(int argc, char *argv[]) {
 
             HIST_ENTRY *bgCmd = current_history();
             if (bgCmd == NULL) {
-              fprintf(stderr, "uh oh, the background command escaped\n");
+              fprintf(stderr, "could not retrieve command for background process\n");
             }
-
             bgPids[bgPidsNum].cmd = bgCmd->line;
 
             fprintf(stdout, "[%d] %d %s\n", bgPids[bgPidsNum].job, bgPids[bgPidsNum].pid, bgPids[bgPidsNum].cmd);
@@ -218,19 +205,11 @@ int main(int argc, char *argv[]) {
           }
         }
       }
-
       cmd_free(cmd);
-    } else {
-      fprintf(stderr, "print me\n");
-      // TODO print info about background processes here
-      // this is for the last time press enter key stuff
-
+    } else {  // print info about background processes finishing if user presses enter
       int bgPidsDone = 0;
-      // go through history list and match??? on strings,,, maybe... unsure
       for (int ii = 0; ii < bgPidsNum; ii++) {
-
         if (bgPids[ii].done) {
-          // bgPidsDone++;
           if (!bgPids[ii].seenDone) {
             bgPids[ii].seenDone = true;
             fprintf(stdout, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
@@ -240,13 +219,13 @@ int main(int argc, char *argv[]) {
         }
       }
       // check if all jobs are done and seen done and reset job number to 1
-      if (bgPidsDone == bgPidsNum) { // takes a second enter to reset,,,
+      if (bgPidsDone == bgPidsNum) {
         jobNum = 1;
-        bgPidsNum = 0; // overwrite beginning
+        bgPidsNum = 0; // overwrite at beginning
       }
     }
 
-    // actually, I want to free the children as soon as possible.
+    // free children as soon as possible, prevent <defunct> processes
     // check every loop for done children...
     for (int ii = 0; ii < bgPidsNum; ii++) {
       if (!bgPids[ii].done) {
@@ -262,11 +241,9 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-
     free(line);
   }
 
-  fprintf(stderr, "free me");
   sh_destroy(&sh);
   return 0;
 }
