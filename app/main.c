@@ -18,10 +18,9 @@ struct bgPid {
   int job;
   pid_t pid;
   char *cmd;
+  bool done;
   bool seenDone;
 };
-
-struct bgPid *expand_bgPids(struct bgPid *bgPids, int currLen);
 
 int main(int argc, char * argv[]) {
   printf("hello world\n");
@@ -29,10 +28,10 @@ int main(int argc, char * argv[]) {
   struct shell sh;
   char *line;
   int bgPidsNum = 0;
-  int bgPidsCapacity = 10;
+  int bgPidsCapacity = 255;
   // pid_t bgPids[bgPidsSize];
   struct bgPid bgPids[bgPidsCapacity];
-  int jobNum = 0;
+  int jobNum = 1;
   bool bg;
 
   parse_args(argc, argv);
@@ -138,6 +137,7 @@ int main(int argc, char * argv[]) {
             if(rVal == -1) {
               perror("tcsetpgrp");
             }
+            // TODO do I also need to restore tmodes? I never take them out
 
             // flush the input, do not remember anything typed while command was executing
             tcflush(sh.shell_terminal, TCIOFLUSH);
@@ -173,33 +173,39 @@ int main(int argc, char * argv[]) {
       fprintf(stderr, "print me\n");
       // TODO print info about background processes here
       // this is for the last time press enter key stuff
-      
+
+      int bgPidsDone = 0;      
       // go through history list and match??? on strings,,, maybe... unsure
       for(int ii = 0; ii < bgPidsNum; ii++) {
 
         if(!bgPids[ii].seenDone) {
           int waitStatusBg;
-          waitpid(bgPids[ii].pid, &waitStatusBg, WNOHANG);
 
-          if(WIFEXITED(waitStatusBg) /*|| WIFSIGNALED(waitStatusBg) */) {
+          pid_t waitBg = waitpid(bgPids[ii].pid, &waitStatusBg, WNOHANG); // FIXY unfortunately, done processes wait in the <defunct> state until "cleared" by this
+          if(waitBg == -1) {
+            perror("waitpid");
+          }
+
+          if(bgPids[ii].pid == waitBg) {  // waitpid() with WNOHANG returns pid when status changes
             bgPids[ii].seenDone = true;
             fprintf(stdout, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
+            bgPidsDone++;
           }
+        } else {
+          bgPidsDone++;
         }
       }
-
+      // check if all jobs are done and seen done and reset job number to 1
+        if(bgPidsDone == bgPidsNum) { // NOTE user needs to hit enter twice here to actually reset the numbers
+          jobNum = 1;
+          bgPidsNum = 0;  // overwrite beginning
+        }
     }
    
     free(line);
   }
 
-  fprintf(stderr, "free me"); // FIXY jumping to here after a command occurs (fail or not), something to do with line reading?
+  fprintf(stderr, "free me");
   sh_destroy(&sh);
   return 0;
-}
-
-struct bgPid *expand_bgPids(struct bgPid *bgPids, int currLen) {
-  UNUSED(currLen);
-  fprintf(stderr, "expand_bgPids not implemented");
-  return bgPids;
 }
