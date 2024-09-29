@@ -189,22 +189,22 @@ bool do_builtin(struct shell *sh, char **argv) {
   bool isBuiltIn = false;
 
   if (strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
-    fprintf(stderr, "%s: exiting...\n", FUNC_NAME);
+    // fprintf(stderr, "%s: exiting...\n", FUNC_NAME);
     isBuiltIn = true;
     sh_destroy(sh);
   }
   if (strncmp(argv[0], CD, strlen(CD) + 1) == 0) {
-    fprintf(stderr, "%s: changing dir...\n", FUNC_NAME);
+    // fprintf(stderr, "%s: changing dir...\n", FUNC_NAME);
     isBuiltIn = true;
     change_dir(argv);
   }
   if (strncmp(argv[0], HISTORY, strlen(HISTORY) + 1) == 0) {
-    fprintf(stderr, "%s: showing hist...\n", FUNC_NAME);
+    // fprintf(stderr, "%s: showing hist...\n", FUNC_NAME);
     isBuiltIn = true;
     HIST_ENTRY **hist = history_list();
     if (hist == NULL) {
       // fprintf(stderr, "%s: no history\n", FUNC_NAME);
-      fprintf(stderr, "could not retrieve history\n");
+      fprintf(stderr, "%s: could not retrieve history\n", FUNC_NAME);
     } else {
       for (int ii = 0; ii < history_length; ii++) {
         fprintf(stdout, "  %-3d   %s\n", ii, hist[ii]->line);
@@ -212,7 +212,7 @@ bool do_builtin(struct shell *sh, char **argv) {
     }
   }
   if (strncmp(argv[0], JOBS, strlen(JOBS) + 1) == 0) {
-    fprintf(stderr, "%s: listing jobs...\n", FUNC_NAME);
+    // fprintf(stderr, "%s: listing jobs...\n", FUNC_NAME);
     isBuiltIn = true;
 
     int size = sysconf(_SC_ARG_MAX);
