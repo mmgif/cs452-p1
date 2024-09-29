@@ -43,8 +43,8 @@ Task 10
 
 ## Notes
 
-### 2024-09-28
-
+### 2024-09-29
+* TODO being done and beign seen done might be two different concepts 
 
 ### 2024-09-27
 * fix multiple shell exits needed if cmd fails by exiting the child process on execvp failure

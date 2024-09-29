@@ -13,7 +13,8 @@
 
 #include "lab.h"
 
-#define MAX_FILEPATH_SIZE 4096 
+#define BUFFER_SIZE 1024
+#define MAX_PATH_LENGTH 4096 
 //   struct shell
 //   {
 //     int shell_is_interactive;
@@ -247,6 +248,7 @@
     const char *EXIT = "exit";
     const char *CD = "cd";
     const char *HISTORY = "history";
+    const char *JOBS = "jobs";
     bool isBuiltIn = false;
 
     if(strncmp(argv[0], EXIT, strlen(EXIT) + 1) == 0) {
@@ -270,6 +272,19 @@
           fprintf(stdout, "  %-3d   %s\n", ii, hist[ii]->line);
         }
       }
+    }
+    if(strncmp(argv[0], JOBS, strlen(JOBS) + 1) == 0) {
+      fprintf(stderr, "%s: listing jobs...\n", FUNC_NAME);
+      isBuiltIn = true;
+
+      int size = sysconf(_SC_ARG_MAX);
+
+     for(int ii = 1; ii < size; ii++) {
+      if(argv[ii] != NULL) {
+        fprintf(stdout, "%s\n", argv[ii]);
+      }
+    } 
+
     }
     return isBuiltIn;
   }

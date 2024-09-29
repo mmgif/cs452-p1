@@ -13,6 +13,8 @@
 
 #include "../src/lab.h"
 
+#define BUFFER_SIZE 1024
+#define MAX_PATH_LENGTH 4096 
 
 struct bgPid {
   int job;
@@ -24,6 +26,9 @@ struct bgPid {
 
 int main(int argc, char * argv[]) {
   printf("hello world\n");
+
+  const long ARG_MAX = sysconf(_SC_ARG_MAX);
+  const char *JOBS = "jobs";
 
   struct shell sh;
   char *line;
@@ -50,9 +55,6 @@ int main(int argc, char * argv[]) {
     if(line && *line) {   // goes before parsing command, so it shows in history
       add_history(line);
 
-    // TODO if cmd ends in ampersand, then need to fork and not wait
-    // otherwise, we should always fork and wait
-
       // fprintf(stderr, "are you what I think you are? %c\n", line[strlen(line) - 1]);
       if(line[strlen(line) - 1] == '&') {
         bg = true;
@@ -62,6 +64,56 @@ int main(int argc, char * argv[]) {
       }
       
       char **cmd = cmd_parse(line);
+
+      // check for jobs here, so we can append the list of jobs to the cmd before it is decomposed ?
+      // or as it is decomposed, remake it :pensive:
+      if(strncmp(cmd[0], JOBS, strlen(JOBS) + 1) == 0 /*&& bgPidsNum != 0*/) {
+        int padding = 20; // brackets, job num, DONE, spaces (11?)
+        char tmpPid[12];
+
+        char **newCmd = (char**) calloc(ARG_MAX, sizeof(char*));
+        if(newCmd == NULL) {
+          fprintf(stderr, "could not allocate array of strings\n");
+        }
+        newCmd[0] = (char*) malloc(sizeof(char) * (strlen(JOBS) + 1));
+        if(newCmd[0] == NULL) {
+          fprintf(stderr, "could not allocate string\n");
+        }
+        strncpy(newCmd[0], JOBS, strlen(JOBS) + 1);
+
+        for(int ii = 0; ii < bgPidsNum; ii++) {
+          int pidLen = snprintf(tmpPid, 12, "%d", bgPids[ii].pid);
+         if(pidLen == -1) {
+           fprintf(stderr, "could not get decimal representation of pid len\n");
+         }
+          int size = sizeof(char) * strlen(bgPids[ii].cmd) + pidLen + padding + 1;
+          // int size = sizeof(char) * strlen(bgPids[ii].cmd) + 20 + padding + 1;
+
+        //  char* buffer = (char*) malloc(size);
+          newCmd[ii+1] = (char*) malloc(size);
+          if(newCmd[ii+1] == NULL) {
+            fprintf(stderr, "could not allocate string\n");
+          }
+          if(!bgPids[ii].seenDone) {
+          if(bgPids[ii].done) {
+        snprintf(newCmd[ii+1], size, "[%d] Done %s", bgPids[ii].job, bgPids[ii].cmd);
+
+          } else {
+        snprintf(newCmd[ii+1], size, "[%d] %d %s", bgPids[ii].job, bgPids[ii].pid, bgPids[ii].cmd);
+
+          }
+          // strncpy(tempLine[ii+1], )
+        }
+        
+        }
+
+        // assign templine to cmd, free old cmd
+        char **oldCmd = cmd;
+        cmd = newCmd;
+        cmd_free(oldCmd);
+      }
+
+
       if(!do_builtin(&sh, cmd)) {
         // printf("%s\n", line);
         pid_t cmdPid;
@@ -150,6 +202,7 @@ int main(int argc, char * argv[]) {
 
               bgPids[bgPidsNum].job = jobNum;
               bgPids[bgPidsNum].pid = cmdPid;
+              bgPids[bgPidsNum].done = false;
               bgPids[bgPidsNum].seenDone = false;
 
               HIST_ENTRY *bgCmd = current_history();
@@ -178,29 +231,39 @@ int main(int argc, char * argv[]) {
       // go through history list and match??? on strings,,, maybe... unsure
       for(int ii = 0; ii < bgPidsNum; ii++) {
 
-        if(!bgPids[ii].seenDone) {
-          int waitStatusBg;
-
-          pid_t waitBg = waitpid(bgPids[ii].pid, &waitStatusBg, WNOHANG); // FIXY unfortunately, done processes wait in the <defunct> state until "cleared" by this
-          if(waitBg == -1) {
-            perror("waitpid");
-          }
-
-          if(bgPids[ii].pid == waitBg) {  // waitpid() with WNOHANG returns pid when status changes
+        if(bgPids[ii].done) {
+          bgPidsDone++;
+          if(!bgPids[ii].seenDone) {
             bgPids[ii].seenDone = true;
             fprintf(stdout, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
-            bgPidsDone++;
-          }
-        } else {
-          bgPidsDone++;
+            }
         }
       }
       // check if all jobs are done and seen done and reset job number to 1
-        if(bgPidsDone == bgPidsNum) { // NOTE user needs to hit enter twice here to actually reset the numbers
+        if(bgPidsDone == bgPidsNum) { // takes a second enter to reset,,,
           jobNum = 1;
           bgPidsNum = 0;  // overwrite beginning
         }
     }
+
+    // actually, I want to free the children as soon as possible.
+    // check every loop for done children...
+    for(int ii = 0; ii < bgPidsNum; ii++) {
+      if(!bgPids[ii].done) {
+        int waitStatusBg;
+        // free child from the <defunct> state if it is done
+        pid_t waitBg = waitpid(bgPids[ii].pid, &waitStatusBg, WNOHANG);
+        if(waitBg == -1) {
+          perror("waitpid");
+        }
+
+        if(bgPids[ii].pid == waitBg) {  // waitpid() with WNOHANG returns pid when status changes
+          bgPids[ii].done = true;
+        }
+      }
+    }
+    
+
    
     free(line);
   }
