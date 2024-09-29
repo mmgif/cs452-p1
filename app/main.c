@@ -13,11 +13,27 @@
 
 #include "../src/lab.h"
 
+
+struct bgPid {
+  int job;
+  pid_t pid;
+  char *cmd;
+  bool seenDone;
+};
+
+struct bgPid *expand_bgPids(struct bgPid *bgPids, int currLen);
+
 int main(int argc, char * argv[]) {
   printf("hello world\n");
 
   struct shell sh;
   char *line;
+  int bgPidsNum = 0;
+  int bgPidsCapacity = 10;
+  // pid_t bgPids[bgPidsSize];
+  struct bgPid bgPids[bgPidsCapacity];
+  int jobNum = 0;
+  bool bg;
 
   parse_args(argc, argv);
   sh_init(&sh);
@@ -30,18 +46,25 @@ int main(int argc, char * argv[]) {
   while((line = readline(ps))) {
 
     line = trim_white(line);
+    bg = false;
     
     if(line && *line) {   // goes before parsing command, so it shows in history
       add_history(line);
+
+    // TODO if cmd ends in ampersand, then need to fork and not wait
+    // otherwise, we should always fork and wait
+
+      // fprintf(stderr, "are you what I think you are? %c\n", line[strlen(line) - 1]);
+      if(line[strlen(line) - 1] == '&') {
+        bg = true;
+        // fprintf(stderr, "now you're in the background\n");
+        // trim ampersand so command runs proper
+        line[strlen(line) - 1] = '\0';
+      }
       
       char **cmd = cmd_parse(line);
       if(!do_builtin(&sh, cmd)) {
         // printf("%s\n", line);
-    // TODO if cmd ends in ampersand, then need to fork and not wait
-    // otherwise, we should always fork and wait
-
-    // TODO need to do something with arg max, probably has to do with how big command parse is?,
-    // or do I already check that in cmd parse? maybe
         pid_t cmdPid;
         pid_t wait;
         int waitStatus;
@@ -62,10 +85,13 @@ int main(int argc, char * argv[]) {
           if(rVal == -1) {
             perror("setpgid");
           } 
-          errno = 0;
-          rVal = tcsetpgrp(sh.shell_terminal, child);
-          if(rVal == -1) {
-            perror("tcsetpgrp");
+
+          if(!bg) {
+            errno = 0;
+            rVal = tcsetpgrp(sh.shell_terminal, child);
+            if(rVal == -1) {
+              perror("tcsetpgrp");
+            }
           }
           signal(SIGINT, SIG_DFL);          
           signal(SIGQUIT, SIG_DFL);
@@ -80,6 +106,7 @@ int main(int argc, char * argv[]) {
             sh_destroy(&sh);
             exit(rVal);
           }
+
         } else if (cmdPid > 0) {  // this is the parent process
           int rVal;
           // need to set pgid from parent of child?
@@ -90,11 +117,12 @@ int main(int argc, char * argv[]) {
           }
 
           // need to put child into foreground with tcsetgrp
-          errno = 0;
-          rVal = tcsetpgrp(sh.shell_terminal, cmdPid);
-          if(rVal == -1) {
-            perror("tcsetpgrp");
-          }
+          if(!bg) {
+            errno = 0;
+            rVal = tcsetpgrp(sh.shell_terminal, cmdPid);
+            if(rVal == -1) {
+              perror("tcsetpgrp");
+            }
         
           do {
             wait = waitpid(cmdPid, &waitStatus, 0);  // more options for zero in the documentation
@@ -102,15 +130,7 @@ int main(int argc, char * argv[]) {
               perror("waitpid");
               // TODO EXIT?? or idk
             }
-          // FIXY kinda works? but not what I want... have to press enter to move forward. stupid.
-          char c = getchar();
-          while(c != '\n' && c != EOF) {
-            c = getchar();
-          }
-          // TODO ALSO not CONSUMING anything!!
-          } while(!WIFEXITED(waitStatus) && !WIFSIGNALED(waitStatus)); // FIXY do I need anything else?
-          // FIXY need to exit the same amount of failed commands (spawning processes for failed excep commands?)
-          // FIXY need to ignore typed commands when processes are waiting (are these the signals?)
+          } while(!WIFEXITED(waitStatus) && !WIFSIGNALED(waitStatus));
 
           // need to get back the process group? yes!
              errno = 0;
@@ -118,16 +138,56 @@ int main(int argc, char * argv[]) {
             if(rVal == -1) {
               perror("tcsetpgrp");
             }
-          //             char c = getchar(); // TODO need to hit enter to move forward
-          // while(c != '\n' && c != EOF) {
-          //   c = getchar();
-          // }
-          
+
+            // flush the input, do not remember anything typed while command was executing
+            tcflush(sh.shell_terminal, TCIOFLUSH);
+          } else {
+              // TODO we do something here to handle background processes
+              if(bgPidsNum >= bgPidsCapacity) {
+                // bgPids = expand_bgPids(bgPids, bgPidsCapacity);
+                fprintf(stderr, "expand bgpids pls\n");
+              }
+
+              bgPids[bgPidsNum].job = jobNum;
+              bgPids[bgPidsNum].pid = cmdPid;
+              bgPids[bgPidsNum].seenDone = false;
+
+              HIST_ENTRY *bgCmd = current_history();
+              if(bgCmd == NULL) {
+                fprintf(stderr, "uh oh, the background command escaped\n");
+              }
+
+              bgPids[bgPidsNum].cmd = bgCmd->line;
+
+              fprintf(stdout, "[%d] %d %s\n", bgPids[bgPidsNum].job, bgPids[bgPidsNum].pid, bgPids[bgPidsNum].cmd);
+
+              bgPidsNum++;
+              jobNum++;
+
+          }
         }
-       
       }
     
       cmd_free(cmd);      
+    } else {
+      fprintf(stderr, "print me\n");
+      // TODO print info about background processes here
+      // this is for the last time press enter key stuff
+      
+      // go through history list and match??? on strings,,, maybe... unsure
+      for(int ii = 0; ii < bgPidsNum; ii++) {
+
+        if(!bgPids[ii].seenDone) {
+          int waitStatusBg;
+          waitpid(bgPids[ii].pid, &waitStatusBg, WNOHANG);
+
+          if(WIFEXITED(waitStatusBg) /*|| WIFSIGNALED(waitStatusBg) */) {
+            bgPids[ii].seenDone = true;
+            fprintf(stdout, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
+          }
+        }
+      }
+
     }
    
     free(line);
@@ -136,4 +196,10 @@ int main(int argc, char * argv[]) {
   fprintf(stderr, "free me"); // FIXY jumping to here after a command occurs (fail or not), something to do with line reading?
   sh_destroy(&sh);
   return 0;
+}
+
+struct bgPid *expand_bgPids(struct bgPid *bgPids, int currLen) {
+  UNUSED(currLen);
+  fprintf(stderr, "expand_bgPids not implemented");
+  return bgPids;
 }
