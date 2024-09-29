@@ -70,6 +70,7 @@ int main(int argc, char * argv[]) {
       if(strncmp(cmd[0], JOBS, strlen(JOBS) + 1) == 0 /*&& bgPidsNum != 0*/) {
         int padding = 20; // brackets, job num, DONE, spaces (11?)
         char tmpPid[12];
+        int bgPidsLen = bgPidsNum;
 
         char **newCmd = (char**) calloc(ARG_MAX, sizeof(char*));
         if(newCmd == NULL) {
@@ -81,7 +82,7 @@ int main(int argc, char * argv[]) {
         }
         strncpy(newCmd[0], JOBS, strlen(JOBS) + 1);
 
-        for(int ii = 0; ii < bgPidsNum; ii++) {
+        for(int ii = 0; ii < bgPidsLen; ii++) {
           int pidLen = snprintf(tmpPid, 12, "%d", bgPids[ii].pid);
          if(pidLen == -1) {
            fprintf(stderr, "could not get decimal representation of pid len\n");
@@ -90,19 +91,20 @@ int main(int argc, char * argv[]) {
           // int size = sizeof(char) * strlen(bgPids[ii].cmd) + 20 + padding + 1;
 
         //  char* buffer = (char*) malloc(size);
-          newCmd[ii+1] = (char*) malloc(size);
+          newCmd[ii+1] = (char*) calloc(size / sizeof(char), sizeof(char));
           if(newCmd[ii+1] == NULL) {
             fprintf(stderr, "could not allocate string\n");
           }
           if(!bgPids[ii].seenDone) {
           if(bgPids[ii].done) {
-        snprintf(newCmd[ii+1], size, "[%d] Done %s", bgPids[ii].job, bgPids[ii].cmd);
-
+        snprintf(newCmd[ii+1], size, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
+            bgPids[ii].seenDone = true;
           } else {
-        snprintf(newCmd[ii+1], size, "[%d] %d %s", bgPids[ii].job, bgPids[ii].pid, bgPids[ii].cmd);
+        snprintf(newCmd[ii+1], size, "[%d] %d %s\n", bgPids[ii].job, bgPids[ii].pid, bgPids[ii].cmd);
 
           }
           // strncpy(tempLine[ii+1], )
+        } else {
         }
         
         }
@@ -232,10 +234,12 @@ int main(int argc, char * argv[]) {
       for(int ii = 0; ii < bgPidsNum; ii++) {
 
         if(bgPids[ii].done) {
-          bgPidsDone++;
+          // bgPidsDone++;
           if(!bgPids[ii].seenDone) {
             bgPids[ii].seenDone = true;
             fprintf(stdout, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
+            } else {
+              bgPidsDone++;
             }
         }
       }

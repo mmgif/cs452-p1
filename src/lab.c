@@ -281,7 +281,7 @@
 
      for(int ii = 1; ii < size; ii++) {
       if(argv[ii] != NULL) {
-        fprintf(stdout, "%s\n", argv[ii]);
+        fprintf(stdout, "%s", argv[ii]);
       }
     } 
 

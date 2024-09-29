@@ -44,7 +44,8 @@ Task 10
 ## Notes
 
 ### 2024-09-29
-* TODO being done and beign seen done might be two different concepts 
+* [X] being done and beign seen done might be two different concepts 
+* https://stackoverflow.com/questions/8090888/what-is-the-max-possible-length-of-a-pid-of-a-process-64-bit
 
 ### 2024-09-27
 * fix multiple shell exits needed if cmd fails by exiting the child process on execvp failure
