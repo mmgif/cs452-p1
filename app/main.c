@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
       if (strncmp(cmd[0], JOBS, strlen(JOBS) + 1) == 0) {
         int padding = 50; // brackets, job num, DONE, RUNNING, spaces
         char tmpPid[12];  // anywhere between 2 and 12
+        int bgPidsDone = 0;
 
         char **newCmd = (char **)calloc(ARG_MAX, sizeof(char *));
         if (newCmd == NULL) {
@@ -96,10 +97,16 @@ int main(int argc, char *argv[]) {
             if (bgPids[ii].done) {
               snprintf(newCmd[ii + 1], size, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
               bgPids[ii].seenDone = true;
+              bgPidsDone++;
             } else {
               snprintf(newCmd[ii + 1], size, "[%d] %d Running %s\n", bgPids[ii].job, bgPids[ii].pid, bgPids[ii].cmd);
             }
           }
+        }
+        // check if all jobs are done and seen done and reset job number to 1
+        if (bgPidsDone == bgPidsNum) {
+          jobNum = 1;
+          bgPidsNum = 0; // overwrite at beginning
         }
 
         char **oldCmd = cmd;
@@ -213,6 +220,7 @@ int main(int argc, char *argv[]) {
           if (!bgPids[ii].seenDone) {
             bgPids[ii].seenDone = true;
             fprintf(stdout, "[%d] Done %s\n", bgPids[ii].job, bgPids[ii].cmd);
+            bgPidsDone++;
           } else {
             bgPidsDone++;
           }
