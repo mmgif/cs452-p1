@@ -29,13 +29,14 @@ struct bgPid {
 };
 
 int main(int argc, char *argv[]) {
-  printf("hello world\n");
+  // printf("hello world\n");
 
   const long ARG_MAX = sysconf(_SC_ARG_MAX);
   const char *JOBS = "jobs";
 
   struct shell sh;
   char *line;
+
   int bgPidsNum = 0;
   int bgPidsCapacity = 255;
   struct bgPid bgPids[bgPidsCapacity];
