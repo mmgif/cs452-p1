@@ -184,6 +184,7 @@ bool do_builtin(struct shell *sh, char **argv) {
   const char *FUNC_NAME = "do_builtin";
   const char *EXIT = "exit";
   const char *CD = "cd";
+  const char *PWD = "pwd";
   const char *HISTORY = "history";
   const char *JOBS = "jobs";
   bool isBuiltIn = false;
@@ -197,6 +198,17 @@ bool do_builtin(struct shell *sh, char **argv) {
     // fprintf(stderr, "%s: changing dir...\n", FUNC_NAME);
     isBuiltIn = true;
     change_dir(argv);
+  }
+  if (strncmp(argv[0], PWD, strlen(PWD) + 1) == 0) {
+    // fprintf(stderr, "%s: showing current working directory...", FUNC_NAME);
+    isBuiltIn = true;
+    errno = 0;
+    char *buffer = getcwd(NULL, MAX_PATH_LENGTH);
+    if(buffer == NULL) {
+      perror("getcwd");
+    }
+    fprintf(stdout, "%s\n", buffer);
+    free(buffer);
   }
   if (strncmp(argv[0], HISTORY, strlen(HISTORY) + 1) == 0) {
     // fprintf(stderr, "%s: showing hist...\n", FUNC_NAME);
@@ -214,9 +226,7 @@ bool do_builtin(struct shell *sh, char **argv) {
   if (strncmp(argv[0], JOBS, strlen(JOBS) + 1) == 0) {
     // fprintf(stderr, "%s: listing jobs...\n", FUNC_NAME);
     isBuiltIn = true;
-
     int size = sysconf(_SC_ARG_MAX);
-
     for (int ii = 1; ii < size; ii++) {
       if (argv[ii] != NULL) {
         fprintf(stdout, "%s", argv[ii]);
